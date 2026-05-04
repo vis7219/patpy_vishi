@@ -1,10 +1,10 @@
 from pathlib import Path
 
 import scanpy as sc
-from anndata import AnnData
 from scanpy import settings
 
 from patpy.datasets._dataloader import _download
+
 
 def combat_preprocessed(
     overwrite: bool = False,
@@ -16,14 +16,17 @@ def combat_preprocessed(
     The dataset contains 783'677 cells and 3,000 features.
     The function downloads a zip compressed file of approximately 1.5 GB, which is unzipped to an :class:`~anndata.AnnData` file of approximately 5 GB. Download with good internet connection takes approximately 2 min.
 
-    References:
+    References
+    ----------
         Ahern, D. J., Ai, Z., Ainsworth, M., Allan, C., Allcock, A., Angus, B., ... & Salio, M. (2022). A blood atlas of COVID-19 defines hallmarks of disease severity and specificity. Cell, 185(5), 916-938. https://doi.org/10.1016/j.cell.2022.01.012.
         COvid-19 Multi-omics Blood ATlas (COMBAT) Consortium. (2021). A blood atlas of COVID-19 defines hallmarks of disease severity and specificity: Associated data (1.0.1) [Data set]. Zenodo. https://doi.org/10.5281/zenodo.6120249
 
-    Returns:
+    Returns
+    -------
         :class:`~anndata.AnnData` object of scRNA-seq profiles.
 
-    Examples:
+    Examples
+    --------
         >>> import patpy
         >>> adata = patpy.dt.combat_preprocessed()
         >>> adata
@@ -36,7 +39,6 @@ def combat_preprocessed(
             layers: 'X_raw_counts'
             obsp: 'connectivities', 'distances'
     """
-
     output_file_name = "combat_processed.h5ad"
     output_file_path = settings.datasetdir / output_file_name
     if not Path(output_file_path).exists() or overwrite:
@@ -105,14 +107,17 @@ def onek1k_preprocessed(
     The dataset contains 1,248,980 cells and 3,000 features.
     The function downloads a zip compressed file of approximately 2.5 GB, which is unzipped to an :class:`~anndata.AnnData` file of approximately 4 GB. Download with good internet connection takes approximately 3 min.
 
-    References:
+    References
+    ----------
         Yazar, S., Alquicira-Hernandez, J., Wing, K., Senabouth, A., Gordon, M. G., Andersen, S., ... & Powell, J. E. (2022). Single-cell eQTL mapping identifies cell type–specific genetic control of autoimmune disease. Science, 376(6589), eabf3041. https://doi.org/10.1126/science.abf3041
         https://onek1k.org/
 
-    Returns:
+    Returns
+    -------
         :class:`~anndata.AnnData` object of scRNA-seq profiles.
 
-    Examples:
+    Examples
+    --------
         >>> import patpy
         >>> adata = patpy.dt.onek1k_preprocessed()
         >>> adata
@@ -125,7 +130,6 @@ def onek1k_preprocessed(
             layers: 'X_raw_counts'
             obsp: 'connectivities', 'distances'
     """
-
     output_file_name = "onek1k_processed.h5ad"
     output_file_path = settings.datasetdir / output_file_name
     if not Path(output_file_path).exists() or overwrite:

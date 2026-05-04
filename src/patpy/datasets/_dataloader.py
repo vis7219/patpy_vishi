@@ -14,6 +14,7 @@ from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
+
 # from pertpy: https://github.com/scverse/pertpy/blob/ac988bc924d653879a755a18dcc389fea89e54bc/pertpy/data/_dataloader.py#L1
 def _download(  # pragma: no cover
     url: str,
