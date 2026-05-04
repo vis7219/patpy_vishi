@@ -7,6 +7,24 @@ from scipy.spatial.distance import pdist, squareform
 from patpy.datasets.synthetic import bootstrap_genes
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        "--run-datasets",
+        action="store_true",
+        default=False,
+        help="Run tests marked `dataset` (download real datasets; slow).",
+    )
+
+
+def pytest_collection_modifyitems(config, items):
+    if config.getoption("--run-datasets"):
+        return
+    skip_dataset = pytest.mark.skip(reason="needs --run-datasets to run")
+    for item in items:
+        if "dataset" in item.keywords:
+            item.add_marker(skip_dataset)
+
+
 @pytest.fixture(scope="session")
 def synthetic_adata():
     """Structured AnnData with multiple samples and cell types for tests."""
