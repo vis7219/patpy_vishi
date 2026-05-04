@@ -739,7 +739,10 @@ def replicate_robustness(distances_df: pd.DataFrame, replicate_identity_function
         replicate_idx = np.where(replicate_identity_function(col, dists_to_others.index))[0].item()
         replicate_indexes[i] = replicate_idx
 
-    return 1 - np.mean(replicate_indexes)
+    # Max possible rank of a replicate is len(replicate_indexes) - 2: there are
+    # len(replicate_indexes) - 1 other samples after dropping self, indexed 0..n-2.
+    max_rank = len(replicate_indexes) - 2
+    return 1 - np.mean(replicate_indexes) / max_rank
 
 
 def associate_embedding_with_covariates(
