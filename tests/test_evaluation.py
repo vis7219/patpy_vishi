@@ -164,35 +164,29 @@ def test_knn_prediction_score_reverse_technical_score():
     assert relevant_reversed == pytest.approx(relevant_raw)
 
 
-def _make_replicate_distance_matrix(donor_donor: np.ndarray, replicate_distance: float) -> pd.DataFrame:
-    """Build an 8x8 distance DataFrame for 4 donors x 2 replicates.
-
-    ``donor_donor`` is a 4x4 symmetric matrix of inter-donor distances; each donor's
-    two replicates inherit those inter-donor distances and are placed
-    ``replicate_distance`` apart from each other.
-    """
-    n_donors = donor_donor.shape[0]
-    names = [f"donor{d}_{r}" for d in range(n_donors) for r in ("a", "b")]
-    n = len(names)
-    dist = np.zeros((n, n))
-    for i in range(n):
-        for j in range(n):
-            if i == j:
-                continue
-            di = i // 2
-            dj = j // 2
-            if di == dj:
-                dist[i, j] = replicate_distance
-            else:
-                dist[i, j] = donor_donor[di, dj]
-    return pd.DataFrame(dist, index=names, columns=names)
+REPLICATE_NAMES = [
+    "donor0_a", "donor0_b",
+    "donor1_a", "donor1_b",
+    "donor2_a", "donor2_b",
+    "donor3_a", "donor3_b",
+]
 
 
 # Replicate robustness should be 1 when each sample's replicate is its nearest neighbour.
 def test_replicate_robustness_perfect():
-    donor_donor = np.full((4, 4), 1.0)
-    np.fill_diagonal(donor_donor, 0.0)
-    distances_df = _make_replicate_distance_matrix(donor_donor, replicate_distance=0.1)
+    # Replicate pairs sit at 1; all other donor pairs at 8. Each sample's nearest
+    # non-self neighbour is its own replicate.
+    dist = np.array([
+        [0, 1, 8, 8, 8, 8, 8, 8],
+        [1, 0, 8, 8, 8, 8, 8, 8],
+        [8, 8, 0, 1, 8, 8, 8, 8],
+        [8, 8, 1, 0, 8, 8, 8, 8],
+        [8, 8, 8, 8, 0, 1, 8, 8],
+        [8, 8, 8, 8, 1, 0, 8, 8],
+        [8, 8, 8, 8, 8, 8, 0, 1],
+        [8, 8, 8, 8, 8, 8, 1, 0],
+    ], dtype=float)
+    distances_df = pd.DataFrame(dist, index=REPLICATE_NAMES, columns=REPLICATE_NAMES)
 
     score = replicate_robustness(distances_df)
 
@@ -201,9 +195,19 @@ def test_replicate_robustness_perfect():
 
 # Replicate robustness should be 0 when each sample's replicate is its farthest neighbour.
 def test_replicate_robustness_worst():
-    donor_donor = np.full((4, 4), 0.1)
-    np.fill_diagonal(donor_donor, 0.0)
-    distances_df = _make_replicate_distance_matrix(donor_donor, replicate_distance=1.0)
+    # Replicate pairs sit at 8; all other donor pairs at 1. Each sample's own
+    # replicate is the farthest non-self neighbour.
+    dist = np.array([
+        [0, 8, 1, 1, 1, 1, 1, 1],
+        [8, 0, 1, 1, 1, 1, 1, 1],
+        [1, 1, 0, 8, 1, 1, 1, 1],
+        [1, 1, 8, 0, 1, 1, 1, 1],
+        [1, 1, 1, 1, 0, 8, 1, 1],
+        [1, 1, 1, 1, 8, 0, 1, 1],
+        [1, 1, 1, 1, 1, 1, 0, 8],
+        [1, 1, 1, 1, 1, 1, 8, 0],
+    ], dtype=float)
+    distances_df = pd.DataFrame(dist, index=REPLICATE_NAMES, columns=REPLICATE_NAMES)
 
     score = replicate_robustness(distances_df)
 
@@ -212,24 +216,21 @@ def test_replicate_robustness_worst():
 
 # Replicate robustness should fall strictly between 0 and 1 for a mixed configuration.
 def test_replicate_robustness_intermediate():
-    # 4 donors, 2 replicates each. donors 0 and 1 have replicates as nearest neighbours;
-    # donors 2 and 3 have their replicates pushed to the far end of the ranking.
-    names = [f"donor{d}_{r}" for d in range(4) for r in ("a", "b")]
-    n = len(names)
-    dist = np.full((n, n), 1.0)
-    np.fill_diagonal(dist, 0.0)
+    # Donors 0, 1 have tight replicate pairs (distance 1, nearest non-self neighbour).
+    # Donors 2, 3 have loose replicate pairs (distance 8, farthest non-self neighbour).
+    # All other donor pairs sit at the background distance 4.
+    dist = np.array([
+        [0, 1, 4, 4, 4, 4, 4, 4],
+        [1, 0, 4, 4, 4, 4, 4, 4],
+        [4, 4, 0, 1, 4, 4, 4, 4],
+        [4, 4, 1, 0, 4, 4, 4, 4],
+        [4, 4, 4, 4, 0, 8, 4, 4],
+        [4, 4, 4, 4, 8, 0, 4, 4],
+        [4, 4, 4, 4, 4, 4, 0, 8],
+        [4, 4, 4, 4, 4, 4, 8, 0],
+    ], dtype=float)
+    distances_df = pd.DataFrame(dist, index=REPLICATE_NAMES, columns=REPLICATE_NAMES)
 
-    # Tight replicate pairs for donors 0, 1.
-    for d in (0, 1):
-        i, j = 2 * d, 2 * d + 1
-        dist[i, j] = dist[j, i] = 0.05
-
-    # Loose replicate pairs (max distance) for donors 2, 3.
-    for d in (2, 3):
-        i, j = 2 * d, 2 * d + 1
-        dist[i, j] = dist[j, i] = 10.0
-
-    distances_df = pd.DataFrame(dist, index=names, columns=names)
     score = replicate_robustness(distances_df)
 
     assert 0.0 < score < 1.0
