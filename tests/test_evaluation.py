@@ -12,6 +12,7 @@ from patpy.tl.evaluation import (
     evaluate_representation,
     knn_prediction_score,
     predict_knn,
+    replicate_robustness,
 )
 
 
@@ -161,3 +162,77 @@ def test_knn_prediction_score_reverse_technical_score():
 
     assert technical_reversed == pytest.approx(1 - technical_raw)
     assert relevant_reversed == pytest.approx(relevant_raw)
+
+
+def _make_replicate_distance_matrix(donor_donor: np.ndarray, replicate_distance: float) -> pd.DataFrame:
+    """Build an 8x8 distance DataFrame for 4 donors x 2 replicates.
+
+    ``donor_donor`` is a 4x4 symmetric matrix of inter-donor distances; each donor's
+    two replicates inherit those inter-donor distances and are placed
+    ``replicate_distance`` apart from each other.
+    """
+    n_donors = donor_donor.shape[0]
+    names = [f"donor{d}_{r}" for d in range(n_donors) for r in ("a", "b")]
+    n = len(names)
+    dist = np.zeros((n, n))
+    for i in range(n):
+        for j in range(n):
+            if i == j:
+                continue
+            di = i // 2
+            dj = j // 2
+            if di == dj:
+                dist[i, j] = replicate_distance
+            else:
+                dist[i, j] = donor_donor[di, dj]
+    return pd.DataFrame(dist, index=names, columns=names)
+
+
+# Replicate robustness should be 1 when each sample's replicate is its nearest neighbour.
+def test_replicate_robustness_perfect():
+    donor_donor = np.full((4, 4), 1.0)
+    np.fill_diagonal(donor_donor, 0.0)
+    distances_df = _make_replicate_distance_matrix(donor_donor, replicate_distance=0.1)
+
+    score = replicate_robustness(distances_df)
+
+    assert score == pytest.approx(1.0)
+
+
+# Replicate robustness should be 0 when each sample's replicate is its farthest neighbour.
+def test_replicate_robustness_worst():
+    donor_donor = np.full((4, 4), 0.1)
+    np.fill_diagonal(donor_donor, 0.0)
+    distances_df = _make_replicate_distance_matrix(donor_donor, replicate_distance=1.0)
+
+    score = replicate_robustness(distances_df)
+
+    assert score == pytest.approx(0.0)
+
+
+# Replicate robustness should fall strictly between 0 and 1 for a mixed configuration.
+def test_replicate_robustness_intermediate():
+    # 4 donors, 2 replicates each. donors 0 and 1 have replicates as nearest neighbours;
+    # donors 2 and 3 have their replicates pushed to the far end of the ranking.
+    names = [f"donor{d}_{r}" for d in range(4) for r in ("a", "b")]
+    n = len(names)
+    dist = np.full((n, n), 1.0)
+    np.fill_diagonal(dist, 0.0)
+
+    # Tight replicate pairs for donors 0, 1.
+    for d in (0, 1):
+        i, j = 2 * d, 2 * d + 1
+        dist[i, j] = dist[j, i] = 0.05
+
+    # Loose replicate pairs (max distance) for donors 2, 3.
+    for d in (2, 3):
+        i, j = 2 * d, 2 * d + 1
+        dist[i, j] = dist[j, i] = 10.0
+
+    distances_df = pd.DataFrame(dist, index=names, columns=names)
+    score = replicate_robustness(distances_df)
+
+    assert 0.0 < score < 1.0
+    # Half the samples have replicate at rank 0; the other half at rank n-2.
+    # Mean rank = (n-2)/2; normalised score = 1 - 0.5 = 0.5.
+    assert score == pytest.approx(0.5)
