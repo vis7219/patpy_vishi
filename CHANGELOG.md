@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning][].
 [keep a changelog]: https://keepachangelog.com/en/1.0.0/
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
+## 0.15.4
+
+### Fixed
+
+- `patpy.tl.evaluation.replicate_robustness` normalisation: the metric now reaches 0 in the worst case (replicate is the farthest neighbour for every sample).
+
+### Added
+
+- Tests for `replicate_robustness` covering best, worst, and intermediate configurations.
+- Expanded docstring for `replicate_robustness`.
+
 ## 0.15.3
 
 ### Fixed

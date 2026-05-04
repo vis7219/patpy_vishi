@@ -721,15 +721,57 @@ def knn_prediction_score(
 
 
 def replicate_robustness(distances_df: pd.DataFrame, replicate_identity_function=_identity_up_to_suffix) -> float:
-    """Compute the replicate robustness metric, which checks how close the repliicate samples are to each other
+    """Compute the replicate robustness metric, which checks how close the replicate samples are to each other.
+
+    For every sample, the rank of its replicate is found in the list of distances to
+    all other samples (sorted ascending, self excluded). Ranks are then averaged and
+    normalised so the score lies in ``[0, 1]``:
+
+    - ``1.0`` — every sample's replicate is its nearest neighbour (perfect robustness).
+    - ``0.0`` — every sample's replicate is its farthest neighbour (worst case).
+    - values in between mix the two regimes.
 
     Parameters
     ----------
-    distances_df: pd.DataFrame
-        The distances between samples. Must be a data frame with samples names in index and columns.
-    replicate_identity_function: Callable
-        A function that takes names of two samples and returns True if they are replicates
+    distances_df : pd.DataFrame
+        Square distance matrix with sample names on both index and columns. Each
+        sample is expected to have exactly one replicate present in the matrix
+        (besides itself).
+    replicate_identity_function : Callable, optional
+        Function ``(name, names) -> list[bool]`` that returns, for a single
+        sample ``name`` and an iterable of candidate ``names``, a boolean mask
+        flagging which candidates are replicates of ``name``. Exactly one
+        ``True`` is expected per call.
 
+        The default, :func:`_identity_up_to_suffix`, treats two samples as
+        replicates when their names match up to the part before the last
+        underscore. For instance ``"donor1_a"`` and ``"donor1_b"`` are
+        replicates (both strip to ``"donor1"``), while ``"donor1_a"`` and
+        ``"donor2_a"`` are not. Pass a custom function if your naming scheme
+        differs (e.g. replicates encoded in a separate metadata column).
+
+    Returns
+    -------
+    float
+        The replicate robustness score in ``[0, 1]``.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import pandas as pd
+    >>> from patpy.tl.evaluation import replicate_robustness
+    >>> names = ["donor1_a", "donor1_b", "donor2_a", "donor2_b"]
+    >>> dist = np.array(
+    ...     [
+    ...         [0.0, 0.1, 1.0, 1.0],
+    ...         [0.1, 0.0, 1.0, 1.0],
+    ...         [1.0, 1.0, 0.0, 0.1],
+    ...         [1.0, 1.0, 0.1, 0.0],
+    ...     ]
+    ... )
+    >>> distances_df = pd.DataFrame(dist, index=names, columns=names)
+    >>> replicate_robustness(distances_df)
+    1.0
     """
     replicate_indexes = np.zeros(distances_df.shape[0])
 
@@ -739,7 +781,10 @@ def replicate_robustness(distances_df: pd.DataFrame, replicate_identity_function
         replicate_idx = np.where(replicate_identity_function(col, dists_to_others.index))[0].item()
         replicate_indexes[i] = replicate_idx
 
-    return 1 - np.mean(replicate_indexes)
+    # Max possible rank of a replicate is len(replicate_indexes) - 2: there are
+    # len(replicate_indexes) - 1 other samples after dropping self, indexed 0..n-2.
+    max_rank = len(replicate_indexes) - 2
+    return 1 - np.mean(replicate_indexes) / max_rank
 
 
 def associate_embedding_with_covariates(
