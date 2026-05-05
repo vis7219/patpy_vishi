@@ -446,9 +446,9 @@ def _select_random_subset(distances, target, num_donors_subset=None, proportion_
 
 
 # PERMANOVA (permutational MANOVA on a distance matrix)
-# Pseudo-F (so called as there's no true known null distribution in permutation) 
+# Pseudo-F (so called as there's no true known null distribution in permutation)
 # and sums of squares (SS) come from Anderson (2001)
-# SS decomposition method is implemented in the same way as vegan::adonis2. 
+# SS decomposition method is implemented in the same way as vegan::adonis2.
 # Ref: Anderson, M.J. (2001). Austral Ecology 26, 32-46.
 def _permanova_ss_w(distance_sq: np.ndarray, grouping: np.ndarray) -> float:
     """Within-group SS component (``s_W``)"""
@@ -548,8 +548,7 @@ def _validate_permanova_target(target: pd.Series) -> None:
         raise ValueError("PERMANOVA requires at least two distinct groups.")
     if pd.api.types.is_numeric_dtype(t) and n_u > max(25, n // 2):
         raise ValueError(
-            "PERMANOVA expects a categorical grouping; for continuous outcomes use method='knn' "
-            "with task='regression'."
+            "PERMANOVA expects a categorical grouping; for continuous outcomes use method='knn' with task='regression'."
         )
 
 
