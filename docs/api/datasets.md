@@ -13,6 +13,9 @@
     :toctree: ../generated
 
     dt.combat_preprocessed
+    dt.hlca_preprocessed
     dt.onek1k_preprocessed
+    dt.stephenson_preprocessed
+    dt.ticatlas_preprocessed
 
 ```

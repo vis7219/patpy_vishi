@@ -26,7 +26,22 @@ def test_combat_preprocessed_shape(tmp_path):
         adata = patpy.dt.combat_preprocessed()
 
         assert isinstance(adata, AnnData)
-        assert adata.n_obs == 783704
+        assert adata.n_obs == 783677
+        assert adata.n_vars == 3000
+        assert "PCs" in adata.varm
+    finally:
+        sc.settings.datasetdir = original
+
+
+@pytest.mark.dataset
+def test_hlca_preprocessed_shape(tmp_path):
+    original = sc.settings.datasetdir
+    sc.settings.datasetdir = _datasetdir(tmp_path)
+    try:
+        adata = patpy.dt.hlca_preprocessed()
+
+        assert isinstance(adata, AnnData)
+        assert adata.n_obs == 1687127
         assert adata.n_vars == 3000
         assert "PCs" in adata.varm
     finally:
@@ -42,6 +57,36 @@ def test_onek1k_preprocessed_shape(tmp_path):
 
         assert isinstance(adata, AnnData)
         assert adata.n_obs == 1248980
+        assert adata.n_vars == 3000
+        assert "PCs" in adata.varm
+    finally:
+        sc.settings.datasetdir = original
+
+
+@pytest.mark.dataset
+def test_stephenson_preprocessed_shape(tmp_path):
+    original = sc.settings.datasetdir
+    sc.settings.datasetdir = _datasetdir(tmp_path)
+    try:
+        adata = patpy.dt.stephenson_preprocessed()
+
+        assert isinstance(adata, AnnData)
+        assert adata.n_obs == 639482
+        assert adata.n_vars == 3000
+        assert "PCs" in adata.varm
+    finally:
+        sc.settings.datasetdir = original
+
+
+@pytest.mark.dataset
+def test_tica_preprocessed_shape(tmp_path):
+    original = sc.settings.datasetdir
+    sc.settings.datasetdir = _datasetdir(tmp_path)
+    try:
+        adata = patpy.dt.tica_preprocessed()
+
+        assert isinstance(adata, AnnData)
+        assert adata.n_obs == 267547
         assert adata.n_vars == 3000
         assert "PCs" in adata.varm
     finally:
