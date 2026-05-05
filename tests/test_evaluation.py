@@ -115,9 +115,7 @@ def test_permanova_non_contiguous_group_codes():
 def test_evaluate_representation_permanova(toy_distances):
     distances, conditions = toy_distances
 
-    result = evaluate_representation(
-        distances, target=conditions, method="permanova", permutations=199, random_state=0
-    )
+    result = evaluate_representation(distances, target=conditions, method="permanova", permutations=199, random_state=0)
 
     assert isinstance(result, dict)
     assert result["method"] == "permanova"
