@@ -42,7 +42,7 @@ class DatasetInfo:
 
 
 _COMBAT_INFO = DatasetInfo(
-    n_samples=140,
+    n_samples=138,
     n_cells=783677,
     n_features=3000,
     sample_key="scRNASeq_sample_ID",
@@ -51,7 +51,7 @@ _COMBAT_INFO = DatasetInfo(
 )
 
 _HLCA_INFO = DatasetInfo(
-    n_samples=394,
+    n_samples=339,
     n_cells=1687127,
     n_features=3000,
     sample_key="donor_id",
