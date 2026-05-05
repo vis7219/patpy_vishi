@@ -167,9 +167,9 @@ class TestFilterAdataToConditions:
         assert "new_col" not in simple_adata.obs.columns
 
 
-
 class _MockModel:
     """Minimal fake model class for tests that only need __name__."""
+
     __name__ = "MockModel"
 
 
@@ -229,8 +229,7 @@ class TestConditionComparisonSubsetContrasts:
             @staticmethod
             def compare_groups(sub, column, baseline, groups_to_compare, **kw):
                 calls.append(groups_to_compare)
-                return pd.DataFrame({"variable": ["g1"], "log_fc": [1.0],
-                                     "adj_p_value": [0.01], "contrast": ["x"]})
+                return pd.DataFrame({"variable": ["g1"], "log_fc": [1.0], "adj_p_value": [0.01], "contrast": ["x"]})
 
         cc = ConditionComparison(FakeModel)
         cc.run(simple_adata, ["source", "sex"], subset_contrasts=subset)
@@ -239,8 +238,7 @@ class TestConditionComparisonSubsetContrasts:
     def test_bad_contrast_warns_and_raises(self, simple_adata):
         """A contrast that fails is skipped with a UserWarning and raises RuntimeError."""
         fake_contrast = [
-            {"group": "NONEXISTENT_female", "baseline": "HV_female",
-             "label": "NONEXISTENT_female_vs_HV_female"}
+            {"group": "NONEXISTENT_female", "baseline": "HV_female", "label": "NONEXISTENT_female_vs_HV_female"}
         ]
 
         class FakeModel:
@@ -260,13 +258,11 @@ class TestConditionComparisonSubsetContrasts:
 class TestEdgerCoefKey:
     def test_finds_bracket_notation(self):
         coef_names = ["condition_group[COVID_SEV_female]", "condition_group[HV_male]"]
-        assert _edger_coef_key(coef_names, "condition_group", "COVID_SEV_female") == \
-               "condition_group[COVID_SEV_female]"
+        assert _edger_coef_key(coef_names, "condition_group", "COVID_SEV_female") == "condition_group[COVID_SEV_female]"
 
     def test_finds_plain_concatenation(self):
         coef_names = ["condition_groupCOVID_SEV_female", "condition_groupHV_male"]
-        assert _edger_coef_key(coef_names, "condition_group", "COVID_SEV_female") == \
-               "condition_groupCOVID_SEV_female"
+        assert _edger_coef_key(coef_names, "condition_group", "COVID_SEV_female") == "condition_groupCOVID_SEV_female"
 
     def test_returns_none_when_not_found(self):
         coef_names = ["condition_group[HV_female]"]
@@ -275,8 +271,7 @@ class TestEdgerCoefKey:
     def test_bracket_notation_takes_priority(self):
         # Both present — bracket should be returned first
         coef_names = ["condition_group[COVID_SEV_female]", "condition_groupCOVID_SEV_female"]
-        assert _edger_coef_key(coef_names, "condition_group", "COVID_SEV_female") == \
-               "condition_group[COVID_SEV_female]"
+        assert _edger_coef_key(coef_names, "condition_group", "COVID_SEV_female") == "condition_group[COVID_SEV_female]"
 
     def test_different_group_col_prefix(self):
         coef_names = ["mygroup[levelA]", "mygroup[levelB]"]
@@ -286,8 +281,7 @@ class TestEdgerCoefKey:
 
 class TestPyDeseq2ParseLevel:
     def test_strips_bracket_t_notation(self):
-        assert _pydeseq2_parse_level("condition_group[T.COVID_SEV_female]", "condition_group") == \
-               "COVID_SEV_female"
+        assert _pydeseq2_parse_level("condition_group[T.COVID_SEV_female]", "condition_group") == "COVID_SEV_female"
 
     def test_strips_plain_prefix(self):
         assert _pydeseq2_parse_level("condition_groupHV_male", "condition_group") == "HV_male"
@@ -365,18 +359,19 @@ class TestFactorialDEGroupColBuilding:
             def __init__(self, adata, design, **kw):
                 calls.append(("init", design))
                 self.design = pd.DataFrame(
-                    columns=["condition_group[COVID_SEV_female]",
-                             "condition_group[COVID_SEV_male]",
-                             "condition_group[HV_female]",
-                             "condition_group[HV_male]"]
+                    columns=[
+                        "condition_group[COVID_SEV_female]",
+                        "condition_group[COVID_SEV_male]",
+                        "condition_group[HV_female]",
+                        "condition_group[HV_male]",
+                    ]
                 )
 
             def fit(self):
                 calls.append("fit")
 
             def _test_single_contrast(self, vec):
-                return pd.DataFrame({"variable": ["g1"], "log_fc": [0.5],
-                                     "adj_p_value": [0.05]})
+                return pd.DataFrame({"variable": ["g1"], "log_fc": [0.5], "adj_p_value": [0.05]})
 
         fc = FactorialDE(EdgeR)
         fc.run(simple_adata, ["source", "sex"], encoding="group")
@@ -394,20 +389,17 @@ class TestFactorialDEGroupColBuilding:
 
             def __init__(self, adata, design, **kw):
                 observed_categories.append(
-                    list(adata.obs["source"].cat.categories)
-                    if hasattr(adata.obs["source"], "cat") else None
+                    list(adata.obs["source"].cat.categories) if hasattr(adata.obs["source"], "cat") else None
                 )
                 self.design = pd.DataFrame(
-                    columns=["Intercept", "source[T.COVID_SEV]",
-                             "sex[T.male]", "source[T.COVID_SEV]:sex[T.male]"]
+                    columns=["Intercept", "source[T.COVID_SEV]", "sex[T.male]", "source[T.COVID_SEV]:sex[T.male]"]
                 )
 
             def fit(self):
                 pass
 
             def _test_single_contrast(self, vec):
-                return pd.DataFrame({"variable": ["g1"], "log_fc": [0.5],
-                                     "adj_p_value": [0.05]})
+                return pd.DataFrame({"variable": ["g1"], "log_fc": [0.5], "adj_p_value": [0.05]})
 
         fc = FactorialDE(EdgeR)
         fc.run(

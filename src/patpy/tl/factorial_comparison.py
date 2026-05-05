@@ -24,7 +24,7 @@ def _suppress_stdout():
         sys.stdout = old
 
 
-def _make_and_fit(model_cls: Any, adata: "ad.AnnData", design_formula: str, layer: str | None) -> Any:
+def _make_and_fit(model_cls: Any, adata: ad.AnnData, design_formula: str, layer: str | None) -> Any:
     """Construct a pertpy model and call ``.fit()`` exactly once.
 
     pertpy's ``EdgeR.fit()`` assigns ``self.fit = <R ListVector>``, clobbering
@@ -59,7 +59,7 @@ def _edger_coef_key(coef_names: list[str], group_col: str, level: str) -> str | 
 
 def _edger_group(
     model_cls: Any,
-    adata: "ad.AnnData",
+    adata: ad.AnnData,
     group_col: str,
     contrasts: list[dict],
     layer: str | None,
@@ -103,16 +103,13 @@ def _edger_group(
                 stacklevel=4,
             )
     if not results:
-        raise RuntimeError(
-            f"All EdgeR group contrasts failed. "
-            f"Design matrix columns found: {coef_names}"
-        )
+        raise RuntimeError(f"All EdgeR group contrasts failed. Design matrix columns found: {coef_names}")
     return pd.concat(results, ignore_index=True), model
 
 
 def _edger_interaction(
     model_cls: Any,
-    adata: "ad.AnnData",
+    adata: ad.AnnData,
     condition_cols: list[str],
     ref_levels: dict[str, str] | None,
     layer: str | None,
@@ -134,6 +131,7 @@ def _edger_interaction(
     col_a, col_b = condition_cols
     if ref_levels:
         import pandas as _pd
+
         for col, ref in ref_levels.items():
             if col in adata.obs.columns:
                 cats = [ref] + [c for c in adata.obs[col].unique() if c != ref]
@@ -149,9 +147,7 @@ def _edger_interaction(
             res["contrast"] = coef
             results.append(res)
         except Exception as exc:  # noqa: BLE001
-            warnings.warn(
-                f"Coefficient '{coef}' failed: {exc}", UserWarning, stacklevel=4
-            )
+            warnings.warn(f"Coefficient '{coef}' failed: {exc}", UserWarning, stacklevel=4)
     if not results:
         raise RuntimeError("All EdgeR interaction coefficient tests failed.")
     return pd.concat(results, ignore_index=True), model
@@ -167,20 +163,20 @@ def _pydeseq2_parse_level(coef: str, group_col: str) -> str:
 
     PyDESeq2 / R treatment coding produces names like::
 
-        condition_group[T.COVID_SEV_female]   # bracket notation
-        condition_groupCOVID_SEV_female       # plain concatenation
+        condition_group[T.COVID_SEV_female]  # bracket notation
+        condition_groupCOVID_SEV_female  # plain concatenation
 
     Both are handled, returning the bare level string.
     """
     s = coef.replace(f"{group_col}[T.", "").rstrip("]")
     if s.startswith(group_col):
-        s = s[len(group_col):]
+        s = s[len(group_col) :]
     return s
 
 
 def _pydeseq2_group(
     model_cls: Any,
-    adata: "ad.AnnData",
+    adata: ad.AnnData,
     group_col: str,
     contrasts: list[dict],
     layer: str | None,
@@ -205,9 +201,7 @@ def _pydeseq2_group(
     coef_names = _pydeseq2_coef_names(model)
 
     level_to_coef: dict[str, str] = {
-        _pydeseq2_parse_level(c, group_col): c
-        for c in coef_names
-        if group_col in c and c != "Intercept"
+        _pydeseq2_parse_level(c, group_col): c for c in coef_names if group_col in c and c != "Intercept"
     }
     all_levels = sorted(adata.obs[group_col].unique().tolist())
     reference = next((lv for lv in all_levels if lv not in level_to_coef), None)
@@ -230,9 +224,7 @@ def _pydeseq2_group(
             res["contrast"] = label
             results.append(res)
         except Exception as exc:  # noqa: BLE001
-            warnings.warn(
-                f"Contrast '{label}' failed: {exc}", UserWarning, stacklevel=4
-            )
+            warnings.warn(f"Contrast '{label}' failed: {exc}", UserWarning, stacklevel=4)
     if not results:
         raise RuntimeError(
             f"All PyDESeq2 group contrasts failed. "
@@ -243,7 +235,7 @@ def _pydeseq2_group(
 
 def _pydeseq2_interaction(
     model_cls: Any,
-    adata: "ad.AnnData",
+    adata: ad.AnnData,
     condition_cols: list[str],
     ref_levels: dict[str, str] | None,
     layer: str | None,
@@ -261,6 +253,7 @@ def _pydeseq2_interaction(
     col_a, col_b = condition_cols
     if ref_levels:
         import pandas as _pd
+
         for col, ref in ref_levels.items():
             if col in adata.obs.columns:
                 cats = [ref] + [c for c in adata.obs[col].unique() if c != ref]
@@ -279,9 +272,7 @@ def _pydeseq2_interaction(
             res["contrast"] = coef
             results.append(res)
         except Exception as exc:  # noqa: BLE001
-            warnings.warn(
-                f"Coefficient '{coef}' failed: {exc}", UserWarning, stacklevel=4
-            )
+            warnings.warn(f"Coefficient '{coef}' failed: {exc}", UserWarning, stacklevel=4)
     if not results:
         raise RuntimeError("All PyDESeq2 interaction coefficient tests failed.")
     return pd.concat(results, ignore_index=True), model
@@ -362,7 +353,8 @@ class FactorialDE:
     One-shot convenience:
 
     >>> res, model = ptf.FactorialDE.run_once(
-    ...     pt.tl.PyDESeq2, pdata,
+    ...     pt.tl.PyDESeq2,
+    ...     pdata,
     ...     condition_cols=["Source", "Sex"],
     ...     encoding="interaction",
     ...     ref_levels={"Source": "HV", "Sex": "female"},
@@ -376,7 +368,7 @@ class FactorialDE:
 
     def run(
         self,
-        adata: "ad.AnnData",
+        adata: ad.AnnData,
         condition_cols: list[str],
         *,
         encoding: str = "group",
@@ -426,51 +418,33 @@ class FactorialDE:
         name = self.model_cls.__name__
 
         if encoding == "group":
-            adata.obs[group_col] = (
-                adata.obs[condition_cols].astype(str).agg(sep.join, axis=1)
-            )
+            adata.obs[group_col] = adata.obs[condition_cols].astype(str).agg(sep.join, axis=1)
             if contrasts is None:
                 levels = sorted(adata.obs[group_col].unique().tolist())
                 contrasts = [
                     {"group": g, "baseline": b, "label": f"{g}_vs_{b}"}
                     for i, g in enumerate(levels)
-                    for b in levels[i + 1:]
+                    for b in levels[i + 1 :]
                 ]
             if name == "EdgeR":
-                results, model = _edger_group(
-                    self.model_cls, adata, group_col, contrasts, self.layer
-                )
+                results, model = _edger_group(self.model_cls, adata, group_col, contrasts, self.layer)
             elif name == "PyDESeq2":
-                results, model = _pydeseq2_group(
-                    self.model_cls, adata, group_col, contrasts, self.layer
-                )
+                results, model = _pydeseq2_group(self.model_cls, adata, group_col, contrasts, self.layer)
             else:
-                raise ValueError(
-                    f"Unsupported model '{name}'. Use pt.tl.EdgeR or pt.tl.PyDESeq2."
-                )
+                raise ValueError(f"Unsupported model '{name}'. Use pt.tl.EdgeR or pt.tl.PyDESeq2.")
 
         elif encoding == "interaction":
             if len(condition_cols) != 2:
-                raise ValueError(
-                    "encoding='interaction' requires exactly 2 condition_cols."
-                )
+                raise ValueError("encoding='interaction' requires exactly 2 condition_cols.")
             if name == "EdgeR":
-                results, model = _edger_interaction(
-                    self.model_cls, adata, condition_cols, ref_levels, self.layer
-                )
+                results, model = _edger_interaction(self.model_cls, adata, condition_cols, ref_levels, self.layer)
             elif name == "PyDESeq2":
-                results, model = _pydeseq2_interaction(
-                    self.model_cls, adata, condition_cols, ref_levels, self.layer
-                )
+                results, model = _pydeseq2_interaction(self.model_cls, adata, condition_cols, ref_levels, self.layer)
             else:
-                raise ValueError(
-                    f"Unsupported model '{name}'. Use pt.tl.EdgeR or pt.tl.PyDESeq2."
-                )
+                raise ValueError(f"Unsupported model '{name}'. Use pt.tl.EdgeR or pt.tl.PyDESeq2.")
 
         else:
-            raise ValueError(
-                f"encoding must be 'group' or 'interaction', got '{encoding}'."
-            )
+            raise ValueError(f"encoding must be 'group' or 'interaction', got '{encoding}'.")
 
         self.model_ = model
         return results
@@ -506,9 +480,7 @@ class FactorialDE:
         **kw
             Forwarded to pertpy's ``plot_volcano``.
         """
-        return getattr(self.get_model(), "plot_volcano")(
-            results_df[results_df["contrast"] == contrast], **kw
-        )
+        return self.get_model().plot_volcano(results_df[results_df["contrast"] == contrast], **kw)
 
     def plot_fold_change(
         self,
@@ -527,9 +499,7 @@ class FactorialDE:
         **kw
             Forwarded to pertpy's ``plot_fold_change``.
         """
-        return getattr(self.get_model(), "plot_fold_change")(
-            results_df[results_df["contrast"] == contrast], **kw
-        )
+        return self.get_model().plot_fold_change(results_df[results_df["contrast"] == contrast], **kw)
 
     def plot_multicomparison_fc(
         self,
@@ -550,13 +520,13 @@ class FactorialDE:
         **kw
             Forwarded to pertpy's ``plot_multicomparison_fc``.
         """
-        return getattr(self.get_model(), "plot_multicomparison_fc")(results_df, **kw)
+        return self.get_model().plot_multicomparison_fc(results_df, **kw)
 
     @classmethod
     def run_once(
         cls,
         model_cls: Any,
-        adata: "ad.AnnData",
+        adata: ad.AnnData,
         condition_cols: list[str],
         *,
         encoding: str = "group",
@@ -591,7 +561,8 @@ class FactorialDE:
         Examples
         --------
         >>> res, model = ptf.FactorialDE.run_once(
-        ...     pt.tl.EdgeR, pdata,
+        ...     pt.tl.EdgeR,
+        ...     pdata,
         ...     condition_cols=["Source", "Sex"],
         ...     encoding="interaction",
         ...     ref_levels={"Source": "HV", "Sex": "female"},
@@ -600,9 +571,13 @@ class FactorialDE:
         """
         fde = cls(model_cls, layer=layer)
         results = fde.run(
-            adata, condition_cols,
-            encoding=encoding, group_col=group_col, sep=sep,
-            ref_levels=ref_levels, contrasts=contrasts,
+            adata,
+            condition_cols,
+            encoding=encoding,
+            group_col=group_col,
+            sep=sep,
+            ref_levels=ref_levels,
+            contrasts=contrasts,
         )
         return results, fde.model_
 
