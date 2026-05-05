@@ -4,6 +4,9 @@ from .condition_comparison import (
     build_condition_combinations,
     filter_adata_to_conditions,
 )
+from .factorial_comparison import (
+    FactorialDE,
+)
 from .evaluation import (
     associate_embedding_with_covariates,
     evaluate_prediction,
