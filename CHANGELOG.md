@@ -18,6 +18,21 @@ and this project adheres to [Semantic Versioning][].
 
 - `DISTANCES_UNS_KEY` from sample representation methods
 
+## 0.16.0 – datasets module
+
+### Added
+
+- `datasets` module with functions to download preprocessed datasets
+- `patpy/datasets/_datasets/DatasetInfo` data class to define information about datasets
+- `patpy/datasets/_datasets/_load_dataset` util function
+- `patpy/datasets/_datasets/combat_preprocessed` dataset
+- `patpy/datasets/_datasets/stephenson_preprocessed`
+- `patpy/datasets/_datasets/hlca_preprocessed` dataset
+- `patpy/datasets/_datasets/onek1k_preprocessed` dataset
+- `patpy/datasets/_datasets/ticatlas_preprocessed` dataset
+- Tests for loading datasets `tests/test_datasets.py`
+- Github workflow at `.github/workflows/test.yaml` with caching to not download datasets each time
+
 ## 0.15.4
 
 ### Fixed

@@ -18,8 +18,8 @@ class DatasetInfo:
 
     Attributes
     ----------
-    n_donors
-        Number of unique donors / patients in the dataset.
+    n_samples
+        Number of unique samples (donors / patients) in the dataset.
     n_cells
         Total number of cells (``adata.n_obs``).
     n_features
@@ -33,7 +33,7 @@ class DatasetInfo:
         sample-level (donor-level) metadata such as condition, outcome, or batch.
     """
 
-    n_donors: int
+    n_samples: int
     n_cells: int
     n_features: int
     sample_key: str
@@ -42,7 +42,7 @@ class DatasetInfo:
 
 
 _COMBAT_INFO = DatasetInfo(
-    n_donors=140,
+    n_samples=138,
     n_cells=783677,
     n_features=3000,
     sample_key="scRNASeq_sample_ID",
@@ -50,41 +50,74 @@ _COMBAT_INFO = DatasetInfo(
     sample_metadata_columns=["Source", "Outcome", "Death28", "Institute", "Pool_ID"],
 )
 
-# TODO Vlad: fill
 _HLCA_INFO = DatasetInfo(
-    n_donors=-1,
+    n_samples=339,
     n_cells=1687127,
     n_features=3000,
-    sample_key="-1",
-    cell_type_key="-1",
-    sample_metadata_columns=["-1"],
+    sample_key="donor_id",
+    cell_type_key="cell_type",
+    sample_metadata_columns=[
+        "suspension_type",
+        "BMI",
+        "age_or_mean_of_age_range",
+        "age_range",
+        "anatomical_region_ccf_score",
+        "cause_of_death",
+        "core_or_extension",
+        "fresh_or_frozen",
+        "lung_condition",
+        "sequencing_platform",
+        "smoking_status",
+        "subject_type",
+        "assay",
+        "disease",
+        "sex",
+        "tissue",
+        "self_reported_ethnicity",
+        "development_stage",
+    ],
 )
-# TODO Vlad: fill
+
 _ONEK1K_INFO = DatasetInfo(
-    n_donors=-1,
+    n_samples=981,
     n_cells=1248980,
     n_features=3000,
-    sample_key="-1",
-    cell_type_key="-1",
-    sample_metadata_columns=["-1"],
+    sample_key="donor_id",
+    cell_type_key="cell_type",
+    sample_metadata_columns=["pool_number", "age", "sex"],
 )
-# TODO Vlad: fill
+
 _STEPHENSON_INFO = DatasetInfo(
-    n_donors=-1,
+    n_samples=131,
     n_cells=639482,
     n_features=3000,
-    sample_key="-1",
-    cell_type_key="-1",
-    sample_metadata_columns=["-1"],
+    sample_key="sample_id",
+    cell_type_key="cell_type",
+    sample_metadata_columns=[
+        "Resample",
+        "Collection_Day",
+        "Swab_result",
+        "Status",
+        "Smoker",
+        "Status_on_day_collection",
+        "Status_on_day_collection_summary",
+        "Days_from_onset",
+        "Site",
+        "Worst_Clinical_Status",
+        "Outcome",
+        "disease",
+        "sex",
+        "development_stage",
+    ],
 )
-# TODO Vlad: fill
+
 _TICATLAS_INFO = DatasetInfo(
-    n_donors=-1,
+    n_samples=123,
     n_cells=267547,
     n_features=3000,
-    sample_key="-1",
-    cell_type_key="-1",
-    sample_metadata_columns=["-1"],
+    sample_key="patient",
+    cell_type_key="lv1_annot",
+    sample_metadata_columns=["patient", "gender", "subtype", "source"],
 )
 
 

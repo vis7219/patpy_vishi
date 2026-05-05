@@ -24,6 +24,7 @@ def _check_dataset_info(adata: AnnData, info: DatasetInfo) -> None:
     assert info.n_cells == adata.n_obs
     assert info.n_features == adata.n_vars
     assert info.sample_key in adata.obs.columns
+    assert adata.obs[info.sample_key].nunique() == info.n_samples
     assert info.cell_type_key in adata.obs.columns
     for col in info.sample_metadata_columns:
         assert col in adata.obs.columns
@@ -60,8 +61,7 @@ def test_hlca_preprocessed(tmp_path):
         assert "PCs" in adata.varm
 
         adata, info = patpy.datasets.hlca_preprocessed(return_dataset_info=True)
-        # TODO Vlad: activate once true information is filled in
-        # _check_dataset_info(adata, info)
+        _check_dataset_info(adata, info)
     finally:
         patpy.settings.datasetdir = original
 
@@ -79,8 +79,7 @@ def test_onek1k_preprocessed(tmp_path):
         assert "PCs" in adata.varm
 
         adata, info = patpy.datasets.onek1k_preprocessed(return_dataset_info=True)
-        # TODO Vlad: activate once true information is filled in
-        # _check_dataset_info(adata, info)
+        _check_dataset_info(adata, info)
     finally:
         patpy.settings.datasetdir = original
 
@@ -98,8 +97,7 @@ def test_stephenson_preprocessed(tmp_path):
         assert "PCs" in adata.varm
 
         adata, info = patpy.datasets.stephenson_preprocessed(return_dataset_info=True)
-        # TODO Vlad: activate once true information is filled in
-        # _check_dataset_info(adata, info)
+        _check_dataset_info(adata, info)
     finally:
         patpy.settings.datasetdir = original
 
@@ -117,7 +115,6 @@ def test_ticatlas_preprocessed(tmp_path):
         assert "PCs" in adata.varm
 
         adata, info = patpy.datasets.ticatlas_preprocessed(return_dataset_info=True)
-        # TODO Vlad: activate once true information is filled in
-        # _check_dataset_info(adata, info)
+        _check_dataset_info(adata, info)
     finally:
         patpy.settings.datasetdir = original
