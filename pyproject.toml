@@ -224,6 +224,7 @@ addopts = [
 ]
 markers = [
   "helical: integration tests that load real Helical foundation models (slow, requires helical extra)",
+  "dataset: tests that download real datasets from the internet (slow, opt-in via --run-datasets)",
 ]
 
 [tool.coverage.run]
