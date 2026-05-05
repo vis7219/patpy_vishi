@@ -117,6 +117,7 @@ def _edger_interaction(
     col_a, col_b = condition_cols
     if ref_levels:
         import pandas as _pd
+
         for col, ref in ref_levels.items():
             if col in adata.obs.columns:
                 cats = [ref] + [c for c in adata.obs[col].unique() if c != ref]
@@ -240,6 +241,7 @@ def _pydeseq2_interaction(
     col_a, col_b = condition_cols
     if ref_levels:
         import pandas as _pd
+
         for col, ref in ref_levels.items():
             if col in adata.obs.columns:
                 cats = [ref] + [c for c in adata.obs[col].unique() if c != ref]
