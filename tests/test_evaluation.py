@@ -3,7 +3,6 @@ import pandas as pd
 import pytest
 from anndata import AnnData
 
-from patpy.tl._permanova import permanova_pseudo_f_statistic
 from patpy.tl.evaluation import (
     _filter_missing,
     _get_normalized_distances,
@@ -12,6 +11,7 @@ from patpy.tl.evaluation import (
     evaluate_prediction,
     evaluate_representation,
     knn_prediction_score,
+    permanova_pseudo_f_statistic,
     predict_knn,
     replicate_robustness,
 )
