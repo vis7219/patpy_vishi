@@ -53,6 +53,7 @@ def combat_preprocessed(
 
     return adata
 
+
 def hlca_preprocessed(
     overwrite: bool = False,
 ):
@@ -63,13 +64,16 @@ def hlca_preprocessed(
     The dataset contains 1,687,127 cells and 3,000 features.
     The function downloads a zip compressed file of approximately 3 GB, which is unzipped to an :class:`~anndata.AnnData` file of approximately 6.5 GB. Download with good internet connection takes approximately 3 min.
 
-    References:
+    References
+    ----------
         Sikkema, L., Ramírez-Suástegui, C., Strobl, D. C., Gillett, T. E., Zappia, L., Madissoon, E., ... & Theis, F. J. (2023). An integrated cell atlas of the lung in health and disease. Nature medicine, 29(6), 1563-1577. https://doi.org/10.1038/s41591-023-02327-2
 
-    Returns:
+    Returns
+    -------
         :class:`~anndata.AnnData` object of scRNA-seq profiles.
 
-    Examples:
+    Examples
+    --------
         >>> import patpy
         >>> adata = patpy.dt.hlca_preprocessed()
         >>> adata
@@ -82,7 +86,6 @@ def hlca_preprocessed(
             layers: 'X_raw_counts', 'soupX'
             obsp: 'connectivities', 'distances'
     """
-
     output_file_name = "hlca_processed.h5ad"
     output_file_path = settings.datasetdir / output_file_name
     if not Path(output_file_path).exists() or overwrite:
@@ -96,6 +99,7 @@ def hlca_preprocessed(
     adata = sc.read_h5ad(output_file_path)
 
     return adata
+
 
 def onek1k_preprocessed(
     overwrite: bool = False,
@@ -144,6 +148,7 @@ def onek1k_preprocessed(
 
     return adata
 
+
 def stephenson_preprocessed(
     overwrite: bool = False,
 ):
@@ -154,13 +159,16 @@ def stephenson_preprocessed(
     The dataset contains 639,482 cells and 3,000 features.
     The function downloads a zip compressed file of approximately 1.5 GB, which is unzipped to an :class:`~anndata.AnnData` file of approximately 4.5 GB. Download with good internet connection takes approximately 2 min.
 
-    References:
+    References
+    ----------
         Stephenson, E., Reynolds, G., Botting, R. A., Calero-Nieto, F. J., Morgan, M. D., Tuong, Z. K., ... & Haniffa, M. (2021). Single-cell multi-omics analysis of the immune response in COVID-19. Nature medicine, 27(5), 904-916. https://doi.org/10.1038/s41591-021-01329-2
 
-    Returns:
+    Returns
+    -------
         :class:`~anndata.AnnData` object of scRNA-seq profiles.
 
-    Examples:
+    Examples
+    --------
         >>> import patpy
         >>> adata = patpy.dt.stephenson_preprocessed()
         >>> adata
@@ -173,7 +181,6 @@ def stephenson_preprocessed(
             layers: 'X_raw_counts'
             obsp: 'connectivities', 'distances'
     """
-
     output_file_name = "stephenson_processed.h5ad"
     output_file_path = settings.datasetdir / output_file_name
     if not Path(output_file_path).exists() or overwrite:
@@ -188,6 +195,7 @@ def stephenson_preprocessed(
 
     return adata
 
+
 def ticatlas_preprocessed(
     overwrite: bool = False,
 ):
@@ -198,13 +206,16 @@ def ticatlas_preprocessed(
     The dataset contains 267,547 cells and 3,000 features.
     The function downloads a zip compressed file of approximately 0.5 GB, which is unzipped to an :class:`~anndata.AnnData` file of approximately 1.8 GB. Download with good internet connection takes approximately 2 min.
 
-    References:
+    References
+    ----------
         Nieto, P., Elosua-Bayes, M., Trincado, J. L., Marchese, D., Massoni-Badosa, R., Salvany, M., ... & Heyn, H. (2021). A single-cell tumor immune atlas for precision oncology. Genome research, 31(10), 1913-1926. https://doi.org/10.1101/gr.273300.120
 
-    Returns:
+    Returns
+    -------
         :class:`~anndata.AnnData` object of scRNA-seq profiles.
 
-    Examples:
+    Examples
+    --------
         >>> import patpy
         >>> adata = patpy.dt.ticatlas_preprocessed()
         >>> adata
@@ -216,7 +227,6 @@ def ticatlas_preprocessed(
             varm: 'PCs'
             layers: 'X_raw_counts', 'shifted_log_counts'
     """
-
     output_file_name = "ticatlas_processed.h5ad"
     output_file_path = settings.datasetdir / output_file_name
     if not Path(output_file_path).exists() or overwrite:
@@ -230,4 +240,3 @@ def ticatlas_preprocessed(
     adata = sc.read_h5ad(output_file_path)
 
     return adata
-
