@@ -5,15 +5,15 @@ from ._datasets import (
     stephenson_preprocessed,
     ticatlas_preprocessed,
 )
-from .synthetic import covid_19_hallmarks, process_adata, simulate_data
+# from .synthetic import covid_19_hallmarks, process_adata, simulate_data
 
 __all__ = [
     "combat_preprocessed",
-    "covid_19_hallmarks",
+    # "covid_19_hallmarks",
     "hlca_preprocessed",
     "onek1k_preprocessed",
-    "process_adata",
-    "simulate_data",
+    # "process_adata",
+    # "simulate_data",
     "stephenson_preprocessed",
     "ticatlas_preprocessed",
 ]

@@ -79,11 +79,11 @@ def test_stephenson_preprocessed_shape(tmp_path):
 
 
 @pytest.mark.dataset
-def test_tica_preprocessed_shape(tmp_path):
+def test_ticatlas_preprocessed_shape(tmp_path):
     original = sc.settings.datasetdir
     sc.settings.datasetdir = _datasetdir(tmp_path)
     try:
-        adata = patpy.dt.tica_preprocessed()
+        adata = patpy.dt.ticatlas_preprocessed()
 
         assert isinstance(adata, AnnData)
         assert adata.n_obs == 267547
