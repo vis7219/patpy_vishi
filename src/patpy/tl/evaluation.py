@@ -445,18 +445,13 @@ def _select_random_subset(distances, target, num_donors_subset=None, proportion_
     return distances_subset, target_subset
 
 
-# ---------------------------------------------------------------------------
 # PERMANOVA (permutational MANOVA on a distance matrix)
-#
-# Pseudo-F and sums of squares follow Anderson (2001); same single-factor
-# decomposition as vegan::adonis2. scikit-learn does not implement PERMANOVA;
-# silhouette_score is the only sklearn-based distance evaluation here.
-# References: Anderson, M.J. (2001). Austral Ecology 26, 32-46.
-# ---------------------------------------------------------------------------
-
-
-def _permanova_s_w(distance_sq: np.ndarray, grouping: np.ndarray) -> float:
-    """Within-group SS component (``s_W``) matching skbio/vegan conventions."""
+# Pseudo-F (so called as there's no true known null distribution in permutation) 
+# and sums of squares (SS) come from Anderson (2001)
+# SS decomposition method is implemented in the same way as vegan::adonis2. 
+# Ref: Anderson, M.J. (2001). Austral Ecology 26, 32-46.
+def _permanova_ss_w(distance_sq: np.ndarray, grouping: np.ndarray) -> float:
+    """Within-group SS component (``s_W``)"""
     n = distance_sq.shape[0]
     counts = np.bincount(grouping)
     s_w = 0.0
@@ -494,16 +489,14 @@ def permanova_pseudo_f_statistic(distances: np.ndarray, grouping: np.ndarray) ->
     if grp.shape[0] != n:
         raise ValueError("grouping length must match the distance matrix size.")
     _, grp = np.unique(grp, return_inverse=True)
-
     num_groups = int(np.unique(grp).size)
     if num_groups < 2:
         raise ValueError("PERMANOVA requires at least two groups.")
     if n <= num_groups:
         raise ValueError("PERMANOVA requires n_samples > n_groups.")
-
     d_sq = d * d
     s_t = d_sq.sum() / n / 2.0
-    s_w = _permanova_s_w(d_sq, grp)
+    s_w = _permanova_ss_w(d_sq, grp)
     s_a = s_t - s_w
     return (s_a / (num_groups - 1)) / (s_w / (n - num_groups))
 
@@ -537,7 +530,6 @@ def permanova_test(
     f_obs = permanova_pseudo_f_statistic(distances, codes.astype(int, copy=False))
     if permutations == 0:
         return {"pseudo_f": f_obs, "p_value": np.nan, "permutations": 0}
-
     ge = 1
     for _ in range(permutations):
         perm = rng.permutation(codes)
