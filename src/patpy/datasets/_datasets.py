@@ -57,10 +57,24 @@ _HLCA_INFO = DatasetInfo(
     sample_key="donor_id",
     cell_type_key="cell_type",
     sample_metadata_columns=[
-        "suspension_type", "BMI", "age_or_mean_of_age_range", "age_range",
-        "anatomical_region_ccf_score", "cause_of_death", "core_or_extension", "fresh_or_frozen",
-        "lung_condition", "sequencing_platform", "smoking_status", "subject_type", 
-        "assay", "disease", "sex", "tissue", "self_reported_ethnicity", "development_stage"
+        "suspension_type",
+        "BMI",
+        "age_or_mean_of_age_range",
+        "age_range",
+        "anatomical_region_ccf_score",
+        "cause_of_death",
+        "core_or_extension",
+        "fresh_or_frozen",
+        "lung_condition",
+        "sequencing_platform",
+        "smoking_status",
+        "subject_type",
+        "assay",
+        "disease",
+        "sex",
+        "tissue",
+        "self_reported_ethnicity",
+        "development_stage",
     ],
 )
 
@@ -70,7 +84,7 @@ _ONEK1K_INFO = DatasetInfo(
     n_features=3000,
     sample_key="donor_id",
     cell_type_key="cell_type",
-    sample_metadata_columns=["pool_number", "age", "sex"]
+    sample_metadata_columns=["pool_number", "age", "sex"],
 )
 
 _STEPHENSON_INFO = DatasetInfo(
@@ -80,9 +94,20 @@ _STEPHENSON_INFO = DatasetInfo(
     sample_key="sample_id",
     cell_type_key="cell_type",
     sample_metadata_columns=[
-        "Resample", "Collection_Day", "Swab_result", "Status", "Smoker", 'Status_on_day_collection',
-        "Status_on_day_collection_summary", "Days_from_onset", "Site", "Worst_Clinical_Status", "Outcome",
-        "disease", "sex", "development_stage"
+        "Resample",
+        "Collection_Day",
+        "Swab_result",
+        "Status",
+        "Smoker",
+        "Status_on_day_collection",
+        "Status_on_day_collection_summary",
+        "Days_from_onset",
+        "Site",
+        "Worst_Clinical_Status",
+        "Outcome",
+        "disease",
+        "sex",
+        "development_stage",
     ],
 )
 
