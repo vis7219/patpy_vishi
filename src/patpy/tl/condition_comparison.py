@@ -97,7 +97,8 @@ def _iter_contrasts(
 
     if not results:
         raise RuntimeError(
-            "All contrasts failed or returned no results. Check your data, design, and condition columns."
+            "All contrasts failed or returned no results. "
+            "Check your data, design, and condition columns."
         )
 
     return pd.concat(results, ignore_index=True), models
@@ -166,12 +167,16 @@ class ConditionComparison:
 
     >>> cc = ptc.ConditionComparison(pt.tl.EdgeR)
     >>> res_source_sex = cc.run(pdata, condition_cols=["Source", "Sex"])
-    >>> res_source = cc.run(pdata, condition_cols=["Source"])
+    >>> res_source      = cc.run(pdata, condition_cols=["Source"])
 
     One-off analysis:
 
-    >>> res, models = ptc.ConditionComparison.run_once(pt.tl.PyDESeq2, pdata, condition_cols=["Source", "Sex"])
-    >>> models["COVID_SEV_female_vs_HV_female"].plot_volcano(res[res["contrast"] == "COVID_SEV_female_vs_HV_female"])
+    >>> res, models = ptc.ConditionComparison.run_once(
+    ...     pt.tl.PyDESeq2, pdata, condition_cols=["Source", "Sex"]
+    ... )
+    >>> models["COVID_SEV_female_vs_HV_female"].plot_volcano(
+    ...     res[res["contrast"] == "COVID_SEV_female_vs_HV_female"]
+    ... )
 
     Restrict to biologically motivated contrasts only:
 
@@ -378,7 +383,9 @@ class ConditionComparison:
         model = self.get_model(contrast)
         plot_fn = getattr(model, "plot_multicomparison_fc", None)
         if plot_fn is None:
-            raise AttributeError(f"Model class '{type(model).__name__}' has no method 'plot_multicomparison_fc'.")
+            raise AttributeError(
+                f"Model class '{type(model).__name__}' has no method 'plot_multicomparison_fc'."
+            )
         return plot_fn(results_df, **plot_kwargs)
 
     def _plot(

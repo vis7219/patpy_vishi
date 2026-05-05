@@ -84,8 +84,10 @@ def build_all_pairwise_contrasts(
     labels = combos["label"].tolist()
     contrasts = []
     for i, group in enumerate(labels):
-        for baseline in labels[i + 1 :]:
-            contrasts.append({"group": group, "baseline": baseline, "label": f"{group}_vs_{baseline}"})
+        for baseline in labels[i + 1:]:
+            contrasts.append(
+                {"group": group, "baseline": baseline, "label": f"{group}_vs_{baseline}"}
+            )
     return contrasts
 
 
