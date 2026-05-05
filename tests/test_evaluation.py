@@ -91,7 +91,7 @@ def test_select_random_subset():
     assert target_subset.shape[0] == 2
 
 
-# Pseudo-F matches scikit-bio / vegan reference examples (Anderson 2001).
+# Using the same Pseudo-F tests as vegan reference examples (Anderson 2001).
 def test_permanova_pseudo_f_reference_no_ties():
     d = np.array([[0, 1, 5, 4], [1, 0, 3, 2], [5, 3, 0, 3], [4, 2, 3, 0]], dtype=float)
     f = permanova_pseudo_f_statistic(d, np.array([0, 0, 1, 1]))
