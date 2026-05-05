@@ -439,8 +439,6 @@ def correlate_cell_type_expression(
 class SampleRepresentationMethod(BaseSampleMethod):
     """Base class for sample representation methods"""
 
-    DISTANCES_UNS_KEY = "X_method-name_distances"
-
     def __init__(self, sample_key, cell_group_key, layer=None, seed=67):
         super().__init__(
             sample_key=sample_key,
@@ -449,6 +447,7 @@ class SampleRepresentationMethod(BaseSampleMethod):
             seed=seed,
         )
         self.samples_adata = None
+        self._distances: np.ndarray | None = None
 
     def prepare_anndata(self, adata):
         """Prepare *adata* for analysis.
@@ -458,12 +457,19 @@ class SampleRepresentationMethod(BaseSampleMethod):
         Subclasses must call ``super().prepare_anndata(adata)`` first.
         """
         super().prepare_anndata(adata)
+        self._distances = None
 
     def calculate_distance_matrix(self, force: bool = False):
         """Transform-like method: returns samples distances matrix"""
         self._check_adata_loaded()
-        if self.DISTANCES_UNS_KEY in self.adata.uns and not force:
-            return self.adata.uns[self.DISTANCES_UNS_KEY]
+        if force:
+            self._distances = None
+        if self._distances is not None:
+            warnings.warn(
+                f"Using cached distance matrix on {type(self).__name__}. Pass force=True to recompute.",
+                stacklevel=2,
+            )
+            return self._distances
 
     def plot_clustermap(self, metadata_cols=None, figsize=(10, 12), *args, **kwargs):
         """Plot a hierarchically-clustered heat-map of the distance matrix.
@@ -510,7 +516,7 @@ class SampleRepresentationMethod(BaseSampleMethod):
         self.samples_adata = sc.AnnData(
             X=representation,
             obs=metadata.loc[self.samples] if metadata is not None else None,
-            obsm={self.DISTANCES_UNS_KEY: self.calculate_distance_matrix(*args, **kwargs)},
+            obsm={type(self).__name__: self.calculate_distance_matrix(*args, **kwargs)},
         )
 
         # Move samples embeddings to .obsm
@@ -765,8 +771,6 @@ class MrVI(SampleRepresentationMethod):
     Source: https://www.biorxiv.org/content/10.1101/2022.10.04.510898v2
     """
 
-    DISTANCES_UNS_KEY = "X_mrvi_distances"
-
     def __init__(
         self,
         sample_key: str,
@@ -837,7 +841,7 @@ class MrVI(SampleRepresentationMethod):
         ----
         adata.obsm["X_mrvi_z"] - latent representation from the layer Z of MrVI
         adata.obsm["X_mrvi_u"] - latent representation from the layer U of MrVI
-        adata.uns["X_mrvi_distances"] – matrix of distances between samples according to MrVI representation
+        self._distances – matrix of distances between samples according to MrVI representation
 
         Returns
         -------
@@ -874,12 +878,10 @@ class MrVI(SampleRepresentationMethod):
             # Here, we obtain distances between samples in a different way
             # MrVI calculates sample-sample distances per cell and then aggregates them (see below)
             # Here, we first aggregate cells and then calculate sample-sample distances. Note that it produces different results
-            print(
-                f"Using aggregated cell representation approach, distances are stored in self.adata.uns[{self.DISTANCES_UNS_KEY}_cell_based"
-            )
+            print("Using aggregated cell representation approach, distances are stored in self.cell_based_distances")
             distances = scipy.spatial.distance.pdist(self.sample_representation)
             distances = scipy.spatial.distance.squareform(distances)
-            self.adata.uns[self.DISTANCES_UNS_KEY + "_cell_based"] = distances
+            self.cell_based_distances = distances
 
         print("Calculating distance matrix between samples")
 
@@ -896,9 +898,9 @@ class MrVI(SampleRepresentationMethod):
             "sample_sizes": sample_sizes,
         }
 
-        self.adata.uns[self.DISTANCES_UNS_KEY] = avg_distances
+        self._distances = avg_distances
 
-        return self.adata.uns[self.DISTANCES_UNS_KEY]
+        return avg_distances
 
 
 class WassersteinTSNE(SampleRepresentationMethod):
@@ -906,8 +908,6 @@ class WassersteinTSNE(SampleRepresentationMethod):
 
     Source: https://arxiv.org/abs/2205.07531
     """
-
-    DISTANCES_UNS_KEY = "X_wasserstein_distances"
 
     def __init__(self, sample_key, cell_group_key, replicate_key=None, layer="X_scvi", seed=67):
         """Create Wasserstein distances embedding between samples
@@ -931,6 +931,7 @@ class WassersteinTSNE(SampleRepresentationMethod):
 
         self.model = None
         self.distances_model = None
+        self._covariance_weight: float | None = None
 
     def prepare_anndata(self, adata):
         """Set up Gaussian Wasserstein Distance model"""
@@ -961,24 +962,28 @@ class WassersteinTSNE(SampleRepresentationMethod):
         -------
         Matrix of distances between samples
         """
-        super().calculate_distance_matrix()
-        is_correct_key_in_uns = (
-            "wasserstein_covariance_weight" in self.adata.uns
-            and self.adata.uns["wasserstein_covariance_weight"] == covariance_weight
-        )
-        is_recalculated = force or not is_correct_key_in_uns
+        self._check_adata_loaded()
+        weight_matches = self._covariance_weight == covariance_weight
 
-        if self.DISTANCES_UNS_KEY in self.adata.uns:
-            if is_recalculated:
-                warnings.warn(f"Rewriting uns key {self.DISTANCES_UNS_KEY}", stacklevel=1)
-            else:
-                return self.adata.uns[self.DISTANCES_UNS_KEY]
+        if self._distances is not None and not force and weight_matches:
+            warnings.warn(
+                f"Using cached distance matrix on {type(self).__name__}. Pass force=True to recompute.",
+                stacklevel=2,
+            )
+            return self._distances
+
+        if self._distances is not None and not weight_matches:
+            warnings.warn(
+                f"Recomputing Wasserstein distances with covariance_weight={covariance_weight} "
+                f"(previous value: {self._covariance_weight})",
+                stacklevel=1,
+            )
 
         distances = self.distances_model.matrix(covariance_weight).values
-        self.adata.uns[self.DISTANCES_UNS_KEY] = distances
-        self.adata.uns["wasserstein_covariance_weight"] = covariance_weight
+        self._distances = distances
+        self._covariance_weight = covariance_weight
 
-        return self.adata.uns[self.DISTANCES_UNS_KEY]
+        return distances
 
     def plot_clustermap(self, covariance_weight=0.5):
         """Plot clusterized heatmap of samples"""
@@ -990,8 +995,6 @@ class PILOT(SampleRepresentationMethod):
 
     Source: https://www.biorxiv.org/content/10.1101/2022.12.16.520739v1
     """
-
-    DISTANCES_UNS_KEY = "X_pilot_distances"
 
     def __init__(
         self,
@@ -1060,7 +1063,7 @@ class PILOT(SampleRepresentationMethod):
         distances = self.adata.uns["EMD_df"].loc[self.samples, self.samples].to_numpy()
         distances = make_matrix_symmetric(distances)
 
-        self.adata.uns[self.DISTANCES_UNS_KEY] = distances
+        self._distances = distances
         self.adata.uns["pilot_parameters"] = {
             "sample_key": self.sample_key,
             "cell_group_key": self.cell_group_key,
@@ -1071,8 +1074,6 @@ class PILOT(SampleRepresentationMethod):
 
 class Pseudobulk(SampleRepresentationMethod):
     """A simple baseline, which represents samples as pseudobulk of their gene expression"""
-
-    DISTANCES_UNS_KEY = "X_pseudobulk_distances"
 
     def __init__(self, sample_key, cell_group_key, layer="X_pca", seed=67):
         super().__init__(sample_key=sample_key, cell_group_key=cell_group_key, layer=layer, seed=seed)
@@ -1100,7 +1101,7 @@ class Pseudobulk(SampleRepresentationMethod):
         distances = scipy.spatial.distance.pdist(self.sample_representation, metric=distance_metric)
         distances = scipy.spatial.distance.squareform(distances)
 
-        self.adata.uns[self.DISTANCES_UNS_KEY] = distances
+        self._distances = distances
         self.adata.uns["bulk_parameters"] = {
             "sample_key": self.sample_key,
             "aggregate": aggregate,
@@ -1112,8 +1113,6 @@ class Pseudobulk(SampleRepresentationMethod):
 
 class GroupedPseudobulk(SampleRepresentationMethod):
     """Baseline, where distances between samples are average distances between their cell group pseudobulks"""
-
-    DISTANCES_UNS_KEY = "X_ct_pseudobulk_distances"
 
     def __init__(self, sample_key, cell_group_key, layer="X_pca", seed=67):
         super().__init__(sample_key=sample_key, cell_group_key=cell_group_key, layer=layer, seed=seed)
@@ -1142,7 +1141,7 @@ class GroupedPseudobulk(SampleRepresentationMethod):
 
         avg_distances, sample_sizes = calculate_average_without_nans(distances, axis=0)
 
-        self.adata.uns[self.DISTANCES_UNS_KEY] = avg_distances
+        self._distances = avg_distances
         self.adata.uns["celltypebulk_parameters"] = {
             "sample_key": self.sample_key,
             "cell_group_key": self.cell_group_key,
@@ -1156,8 +1155,6 @@ class GroupedPseudobulk(SampleRepresentationMethod):
 
 class RandomVector(SampleRepresentationMethod):
     """A dummy baseline, which represents samples as random embeddings"""
-
-    DISTANCES_UNS_KEY = "X_random_vector_distances"
 
     def __init__(self, sample_key, cell_group_key, latent_dim: int = 30, seed=67):
         super().__init__(sample_key=sample_key, cell_group_key=cell_group_key, seed=seed)
@@ -1177,7 +1174,7 @@ class RandomVector(SampleRepresentationMethod):
         distances = scipy.spatial.distance.pdist(self.sample_representation)
         distances = scipy.spatial.distance.squareform(distances)
 
-        self.adata.uns[self.DISTANCES_UNS_KEY] = distances
+        self._distances = distances
         self.adata.uns["random_vec_parameters"] = {
             "sample_key": self.sample_key,
         }
@@ -1192,8 +1189,6 @@ class CellGroupComposition(SampleRepresentationMethod):
 
     Source (SETA): https://www.bioconductor.org/packages//release/bioc/html/SETA.html
     """
-
-    DISTANCES_UNS_KEY = "X_composition"
 
     def __init__(self, sample_key, cell_group_key, apply_clr=False, pseudocount=1, layer=None, seed=67):
         """Initialize CellGroupComposition
@@ -1235,20 +1230,10 @@ class CellGroupComposition(SampleRepresentationMethod):
 
     def calculate_distance_matrix(self, force: bool = False, dist="euclidean"):
         """Calculate distances between samples represented as cell group composition vectors"""
-        self._check_adata_loaded()
-        is_correct_params_in_uns = (
-            "composition_parameters" in self.adata.uns
-            and self.adata.uns["composition_parameters"].get("apply_clr") == self.apply_clr
-            and self.adata.uns["composition_parameters"].get("pseudocount")
-            == (self.pseudocount if self.apply_clr else None)
-        )
-        is_recalculated = force or not is_correct_params_in_uns
+        distances = super().calculate_distance_matrix(force=force)
 
-        if self.DISTANCES_UNS_KEY in self.adata.uns:
-            if is_recalculated:
-                warnings.warn(f"Rewriting uns key {self.DISTANCES_UNS_KEY}", stacklevel=1)
-            else:
-                return self.adata.uns[self.DISTANCES_UNS_KEY]
+        if distances is not None:
+            return distances
 
         distance_metric = valid_distance_metric(dist)
 
@@ -1273,7 +1258,7 @@ class CellGroupComposition(SampleRepresentationMethod):
         distances = scipy.spatial.distance.pdist(self.sample_representation.values, metric=distance_metric)
         distances = scipy.spatial.distance.squareform(distances)
 
-        self.adata.uns[self.DISTANCES_UNS_KEY] = distances
+        self._distances = distances
         self.adata.uns["composition_parameters"] = {
             "sample_key": self.sample_key,
             "cell_group_key": self.cell_group_key,
@@ -1297,8 +1282,6 @@ class SCPoli(SampleRepresentationMethod):
         "lr_patience": 13,
         "lr_factor": 0.1,
     }
-
-    DISTANCES_UNS_KEY = "X_scpoli"
 
     def __init__(
         self,
@@ -1366,7 +1349,7 @@ class SCPoli(SampleRepresentationMethod):
         distances = scipy.spatial.distance.pdist(self.sample_representation, metric=distance_metric)
         distances = scipy.spatial.distance.squareform(distances)
 
-        self.adata.uns[self.DISTANCES_UNS_KEY] = distances
+        self._distances = distances
         self.adata.uns["scpoli_parameters"] = {
             "sample_key": self.sample_key,
             "cell_group_key": self.cell_group_key,
@@ -1385,8 +1368,6 @@ class PhEMD(SampleRepresentationMethod):
 
     Python implementation source: https://github.com/atong01/MultiscaleEMD/blob/main/comparison/phemd.py
     """
-
-    DISTANCES_UNS_KEY = "X_phemd"
 
     def __init__(self, sample_key, cell_group_key, layer=None, n_clusters: int = 8, seed=67):
         super().__init__(sample_key=sample_key, cell_group_key=cell_group_key, layer=layer, seed=seed)
@@ -1450,15 +1431,13 @@ class PhEMD(SampleRepresentationMethod):
             "cell_group_key": self.cell_group_key,
             "n_clusters": self.n_clusters,
         }
-        self.adata.uns[self.DISTANCES_UNS_KEY] = distances
+        self._distances = distances
 
         return distances
 
 
 class DiffusionEarthMoverDistance(SampleRepresentationMethod):
     """Diffusion Earth Mover's Distance. Source: https://arxiv.org/pdf/2102.12833"""
-
-    DISTANCES_UNS_KEY = "X_diffusion_emd"
 
     def __init__(self, sample_key, cell_group_key, layer=None, seed=67, n_neighbors: int = 15, n_scales: int = 6):
         super().__init__(sample_key=sample_key, cell_group_key=cell_group_key, layer=layer, seed=seed)
@@ -1502,7 +1481,7 @@ class DiffusionEarthMoverDistance(SampleRepresentationMethod):
         distances = scipy.spatial.distance.pdist(self.sample_representation, metric="cityblock")
         distances = scipy.spatial.distance.squareform(distances)
 
-        self.adata.uns[self.DISTANCES_UNS_KEY] = distances
+        self._distances = distances
         self.adata.uns["diffusion_emd_parameters"] = {
             "sample_key": self.sample_key,
             "cell_group_key": self.cell_group_key,
@@ -1510,7 +1489,7 @@ class DiffusionEarthMoverDistance(SampleRepresentationMethod):
             "n_scales": self.n_scales,
         }
 
-        return self.adata.uns[self.DISTANCES_UNS_KEY]
+        return distances
 
 
 class MOFA(SampleRepresentationMethod):
@@ -1572,8 +1551,6 @@ class MOFA(SampleRepresentationMethod):
         Save the model if training is interrupted.
 
     """
-
-    DISTANCES_UNS_KEY = "X_mofa_distances"
 
     def __init__(
         self,
@@ -1729,7 +1706,7 @@ class MOFA(SampleRepresentationMethod):
         distances = scipy.spatial.distance.pdist(self.sample_representation, metric=distance_metric)
         distances = scipy.spatial.distance.squareform(distances)
 
-        self.adata.uns[self.DISTANCES_UNS_KEY] = distances
+        self._distances = distances
         self.adata.uns["mofa_parameters"] = {
             "sample_key": self.sample_key,
             "n_factors": self.n_factors,
@@ -1746,8 +1723,6 @@ class MOFA(SampleRepresentationMethod):
 
 class GloScope(SampleRepresentationMethod):
     """A class that loads a file to R using rpy2 and follows the same interface as other SampleRepresentation methods"""
-
-    DISTANCES_UNS_KEY = "X_gloscope_distances"
 
     def __init__(
         self,
@@ -1822,7 +1797,7 @@ class GloScope(SampleRepresentationMethod):
 
         self.sample_representation = _remove_negative_distances(distances.to_numpy())
 
-        self.adata.uns[self.DISTANCES_UNS_KEY] = self.sample_representation
+        self._distances = self.sample_representation
 
         return self.sample_representation
 
@@ -1838,11 +1813,6 @@ class GloScope_py(SampleRepresentationMethod):
         self.k = k
         self.use_gpu = use_gpu
         self.n_components = n_components
-
-        if self.use_gpu:
-            self.DISTANCES_UNS_KEY = "X_gloscope_cuml_distances"
-        else:
-            self.DISTANCES_UNS_KEY = "X_gloscope_pynndescent_distances"
 
     @staticmethod
     def kl_divergence(r_i, r_j, m_i, m_j, d) -> float:
@@ -2082,6 +2052,6 @@ class GloScope_py(SampleRepresentationMethod):
         self.samples = list(distances.index)
         self.sample_representation = _remove_negative_distances(distances.to_numpy())
 
-        self.adata.uns[self.DISTANCES_UNS_KEY] = self.sample_representation
+        self._distances = self.sample_representation
 
         return self.sample_representation
