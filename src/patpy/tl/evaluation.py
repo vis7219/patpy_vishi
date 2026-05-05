@@ -461,13 +461,14 @@ def evaluate_representation(
         Matrix of distances between samples
     target : array-like
         Vector with the values of a feature for each sample
-    method : Literal["knn", "distances", "proportions", "silhouette"]
+    method : Literal["knn", "distances", "proportions", "silhouette", "persistence", "permanova"]
         Method to use for evaluation:
         - knn: predict values of `target` using K-nearest neighbors and evaluate the prediction
         - distances: test if distances between samples are significantly different from the null distribution
         - proportions: test if distribution of `target` differs between groups (e.g. clusters)
         - silhouette: calculate silhouette score for the given distances
         - persistence: calculate the persistence of connected components in filtration of a kNN graph based on the values of `target`
+        - permanova: PERMANOVA pseudo-F on the distance matrix for a categorical ``target`` (single factor, as in ``vegan::adonis2``). Larger ``score`` means stronger separation
     num_donors_subset : int, optional
         Absolute number of donors to include in the evaluation.
     proportion_donors_subset : float, optional
@@ -488,6 +489,9 @@ def evaluate_representation(
         - persistence:
             - max_feature_difference: maximum difference in the feature values allowed between connected nodes
             - n_neighbors: number of neighbors to use for constructing the kNN graph
+        - permanova:
+            - permutations: permutation count for the p-value (default 999). Use ``0`` to skip permutations (p-value ``nan``)
+            - random_state: seed or ``numpy.random.Generator`` for permutations
 
     Returns
     -------
@@ -500,6 +504,9 @@ def evaluate_representation(
         - method: name of the method used for evaluation
         There are other optional keys depending on the method used for evaluation.
     """
+    if not isinstance(target, pd.Series):
+        target = pd.Series(np.asarray(target))
+
     if num_donors_subset is not None or proportion_donors_subset is not None:
         distances, target = _select_random_subset(distances, target, num_donors_subset, proportion_donors_subset)
 
@@ -534,6 +541,35 @@ def evaluate_representation(
 
         ## The lower the total_lifetime, the better the representation
         result = {"score": result_ph["total_lifetime"], "metric": "total_lifetime"}
+
+    elif method == "permanova":
+        from patpy.tl._permanova import permanova_test, validate_permanova_target
+
+        validate_permanova_target(target)
+        params = dict(parameters)
+        permutations = int(params.pop("permutations", 999))
+        random_state = params.pop("random_state", None)
+        if params:
+            raise TypeError(f"Unexpected parameters for permanova: {sorted(params)}")
+
+        out = permanova_test(
+            distances,
+            target,
+            permutations=permutations,
+            random_state=random_state,
+        )
+        result = {
+            "score": out["pseudo_f"],
+            "metric": "permanova_pseudo_f",
+            "p_value": out["p_value"],
+            "permutations": out["permutations"],
+        }
+
+    else:
+        raise ValueError(
+            f"Unknown evaluation method {method!r}. Choose one of 'knn', 'distances', 'proportions', "
+            "'silhouette', 'persistence', 'permanova'."
+        )
 
     result["n_unique"] = len(np.unique(target))
     result["n_observations"] = len(target)  # Without missing values this number can change between features

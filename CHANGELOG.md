@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning][].
 
 ## 0.16.1
 
+### Added
+
+- `evaluate_representation(..., method="permanova")` for categorical outcomes: PERMANOVA pseudo-F (single factor, same decomposition as ``vegan::adonis2``) with permutation p-values in pure Python
+
 ### Changed
 
 - Moved distances caching from anndata object to the instance of the sample representation class

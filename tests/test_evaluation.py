@@ -3,6 +3,7 @@ import pandas as pd
 import pytest
 from anndata import AnnData
 
+from patpy.tl._permanova import permanova_pseudo_f_statistic
 from patpy.tl.evaluation import (
     _filter_missing,
     _get_normalized_distances,
@@ -90,8 +91,63 @@ def test_select_random_subset():
     assert target_subset.shape[0] == 2
 
 
-# Validate full evaluate_representation pipeline for k-NN classification.
-def test_evaluate_representation(toy_distances):
+# Pseudo-F matches scikit-bio / vegan reference examples (Anderson 2001).
+def test_permanova_pseudo_f_reference_no_ties():
+    d = np.array([[0, 1, 5, 4], [1, 0, 3, 2], [5, 3, 0, 3], [4, 2, 3, 0]], dtype=float)
+    f = permanova_pseudo_f_statistic(d, np.array([0, 0, 1, 1]))
+    assert f == pytest.approx(4.4)
+
+
+def test_permanova_pseudo_f_reference_ties():
+    d = np.array([[0, 1, 1, 4], [1, 0, 3, 2], [1, 3, 0, 3], [4, 2, 3, 0]], dtype=float)
+    f = permanova_pseudo_f_statistic(d, np.array([0, 0, 1, 1]))
+    assert f == pytest.approx(2.0)
+
+
+def test_permanova_non_contiguous_group_codes():
+    d = np.array([[0, 1, 5, 4], [1, 0, 3, 2], [5, 3, 0, 3], [4, 2, 3, 0]], dtype=float)
+    f1 = permanova_pseudo_f_statistic(d, np.array([0, 0, 1, 1]))
+    f2 = permanova_pseudo_f_statistic(d, np.array([10, 10, 20, 20]))
+    assert f1 == pytest.approx(f2)
+
+
+# Validate full evaluate_representation pipeline for PERMANOVA.
+def test_evaluate_representation_permanova(toy_distances):
+    distances, conditions = toy_distances
+
+    result = evaluate_representation(
+        distances, target=conditions, method="permanova", permutations=199, random_state=0
+    )
+
+    assert isinstance(result, dict)
+    assert result["method"] == "permanova"
+    assert result["metric"] == "permanova_pseudo_f"
+    assert "p_value" in result
+    assert np.isfinite(result["score"])
+    for key in ("score", "metric", "n_unique", "n_observations", "method"):
+        assert key in result
+
+
+def test_evaluate_representation_permanova_rejects_continuous_numeric():
+    n = 40
+    rng = np.random.default_rng(0)
+    d = rng.random((n, n))
+    d = (d + d.T) / 2
+    np.fill_diagonal(d, 0)
+    target = pd.Series(np.linspace(0, 1, n))
+
+    with pytest.raises(ValueError, match="categorical"):
+        evaluate_representation(d, target=target, method="permanova", permutations=9, random_state=0)
+
+
+def test_evaluate_representation_unknown_method(toy_distances):
+    distances, conditions = toy_distances
+
+    with pytest.raises(ValueError, match="Unknown evaluation method"):
+        evaluate_representation(distances, target=conditions, method="not_a_real_method")  # type: ignore[arg-type]
+
+
+def test_evaluate_representation_knn(toy_distances):
     distances, conditions = toy_distances
 
     result = evaluate_representation(distances, target=conditions, method="knn", n_neighbors=2, task="classification")
