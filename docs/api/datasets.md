@@ -12,7 +12,6 @@
 .. autosummary::
     :toctree: ../generated
 
-    datasets.DatasetInfo
     datasets.combat_preprocessed
     datasets.hlca_preprocessed
     datasets.onek1k_preprocessed

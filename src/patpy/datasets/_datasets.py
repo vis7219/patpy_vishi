@@ -109,7 +109,7 @@ def combat_preprocessed(
 ) -> AnnData | tuple[AnnData, DatasetInfo]:
     """Processed COvid-19 Multi-omics Blood ATlas (COMBAT) dataset.
 
-    Here, data was preprocessed according to the standard scanpy pipeline, cells annotated as "nan" removed, PCA, scVI, scANVI and scPoli dimensionality reduction and reduction were applied.
+    Here, data was preprocessed according to the standard scanpy pipeline, cells annotated as "nan" removed, PCA, scVI, scANVI and scPoli dimensionality reduction were applied.
 
     The dataset contains 783'677 cells and 3,000 features.
     The function downloads a zip compressed file of approximately 1.5 GB, which is unzipped to an :class:`~anndata.AnnData` file of approximately 5 GB. Download with good internet connection takes approximately 2 min.
@@ -164,7 +164,7 @@ def hlca_preprocessed(
 ) -> AnnData | tuple[AnnData, DatasetInfo]:
     """Processed Human Lung Cell Atlas (HLCA) dataset.
 
-    Here, data was preprocessed according to the standard scanpy pipeline, cells annotated as "nan" removed, PCA, scVI, scANVI and scPoli dimensionality reduction and reduction were applied.
+    Here, data was preprocessed according to the standard scanpy pipeline, cells annotated as "nan" removed, PCA, scVI, scANVI and scPoli dimensionality reduction were applied.
 
     The dataset contains 1,687,127 cells and 3,000 features.
     The function downloads a zip compressed file of approximately 3 GB, which is unzipped to an :class:`~anndata.AnnData` file of approximately 6.5 GB. Download with good internet connection takes approximately 3 min.
@@ -216,7 +216,7 @@ def onek1k_preprocessed(
 ) -> AnnData | tuple[AnnData, DatasetInfo]:
     """Processed onek1k dataset.
 
-    Here, data was preprocessed according to the standard scanpy pipeline, cells annotated as "nan" removed, PCA, scVI, scANVI and scPoli dimensionality reduction and reduction were applied.
+    Here, data was preprocessed according to the standard scanpy pipeline, cells annotated as "nan" removed, PCA, scVI, scANVI and scPoli dimensionality reduction were applied.
 
     The dataset contains 1,248,980 cells and 3,000 features.
     The function downloads a zip compressed file of approximately 2.5 GB, which is unzipped to an :class:`~anndata.AnnData` file of approximately 4 GB. Download with good internet connection takes approximately 3 min.
@@ -269,7 +269,7 @@ def stephenson_preprocessed(
 ) -> AnnData | tuple[AnnData, DatasetInfo]:
     """Processed multi-omics immune response in COVID-19 (Stephenson) dataset.
 
-    Here, data was preprocessed according to the standard scanpy pipeline, cells annotated as "nan" removed, PCA, scVI, scANVI and scPoli dimensionality reduction and reduction were applied.
+    Here, data was preprocessed according to the standard scanpy pipeline, cells annotated as "nan" removed, PCA, scVI, scANVI and scPoli dimensionality reduction were applied.
 
     The dataset contains 639,482 cells and 3,000 features.
     The function downloads a zip compressed file of approximately 1.5 GB, which is unzipped to an :class:`~anndata.AnnData` file of approximately 4.5 GB. Download with good internet connection takes approximately 2 min.
@@ -321,7 +321,7 @@ def ticatlas_preprocessed(
 ) -> AnnData | tuple[AnnData, DatasetInfo]:
     """Processed Tumor Immune Cell Atlas (TICAtlas) dataset.
 
-    Here, data was preprocessed according to the standard scanpy pipeline, cells annotated as "nan" removed, PCA, scVI, scANVI and scPoli dimensionality reduction and reduction were applied.
+    Here, data was preprocessed according to the standard scanpy pipeline, cells annotated as "nan" removed, PCA, scVI, scANVI and scPoli dimensionality reduction were applied.
 
     The dataset contains 267,547 cells and 3,000 features.
     The function downloads a zip compressed file of approximately 0.5 GB, which is unzipped to an :class:`~anndata.AnnData` file of approximately 1.8 GB. Download with good internet connection takes approximately 2 min.
