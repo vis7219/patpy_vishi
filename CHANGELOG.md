@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning][].
 [keep a changelog]: https://keepachangelog.com/en/1.0.0/
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
+## 0.16.1
+
+### Changed
+
+- Moved distances caching from anndata object to the instance of the sample representation class
+
+### Deleted
+
+- `DISTANCES_UNS_KEY` from sample representation methods
+
 ## 0.15.4
 
 ### Fixed
