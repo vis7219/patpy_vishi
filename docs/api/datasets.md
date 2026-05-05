@@ -1,7 +1,7 @@
-# Datasets: `dt`
+# Datasets: `datasets`
 
 ```{eval-rst}
-.. module:: patpy.dt
+.. module:: patpy.datasets
 ```
 
 ```{eval-rst}
@@ -12,10 +12,11 @@
 .. autosummary::
     :toctree: ../generated
 
-    dt.combat_preprocessed
-    dt.hlca_preprocessed
-    dt.onek1k_preprocessed
-    dt.stephenson_preprocessed
-    dt.ticatlas_preprocessed
+    datasets.DatasetInfo
+    datasets.combat_preprocessed
+    datasets.hlca_preprocessed
+    datasets.onek1k_preprocessed
+    datasets.stephenson_preprocessed
+    datasets.ticatlas_preprocessed
 
 ```
