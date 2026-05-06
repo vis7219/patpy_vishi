@@ -28,6 +28,27 @@ it is still possible to use different tools to manage dependencies, such as `uv`
 
 [hatch]: https://hatch.pypa.io/latest/
 
+## Cloning the repository
+
+The tutorial notebooks under `docs/tutorials/notebooks/` are not stored in this repository.
+They live in the separate [lueckenlab/patpy_tutorials][patpy-tutorials-repo] repository and are pulled in as a [git submodule][git-submodules].
+When you clone `patpy`, make sure to fetch submodules too:
+
+```bash
+git clone --recurse-submodules git@github.com:lueckenlab/patpy.git
+```
+
+If you already cloned without `--recurse-submodules`, run this once inside your clone:
+
+```bash
+git submodule update --init --recursive
+```
+
+Without this step, the `docs/tutorials/notebooks/` folder will be empty and `hatch run docs:build` will fail to render the tutorials.
+
+[patpy-tutorials-repo]: https://github.com/lueckenlab/patpy_tutorials
+[git-submodules]: https://git-scm.com/book/en/v2/Git-Tools-Submodules
+
 ## Installing dev dependencies
 
 In addition to the packages needed to _use_ this package,
@@ -277,7 +298,8 @@ See scanpy’s {doc}`scanpy:dev/documentation` for more information on how to wr
 
 ### Tutorials with myst-nb and jupyter notebooks
 
-The documentation is set-up to render jupyter notebooks stored in the `docs/notebooks` directory using [myst-nb][].
+The documentation is set-up to render jupyter notebooks stored in the `docs/tutorials/notebooks/` directory using [myst-nb][].
+That directory is a [git submodule][git-submodules] of [lueckenlab/patpy_tutorials][patpy-tutorials-repo] — see [Cloning the repository](#cloning-the-repository) for the initial setup, and [Editing tutorial notebooks](#editing-tutorial-notebooks-submodule-workflow) below for the day-to-day workflow.
 Currently, only notebooks in `.ipynb` format are supported that will be included with both their input and output cells.
 It is your responsibility to update and re-run the notebook whenever necessary.
 
@@ -285,6 +307,41 @@ If you are interested in automatically running notebooks as part of the continuo
 please check out [this feature request][issue-render-notebooks] in the `cookiecutter-scverse` repository.
 
 [issue-render-notebooks]: https://github.com/scverse/cookiecutter-scverse/issues/40
+
+#### Editing tutorial notebooks (submodule workflow)
+
+Tutorial notebooks live in [lueckenlab/patpy_tutorials][patpy-tutorials-repo] and are pinned in `patpy` at a specific commit. Editing them is a two-step process:
+
+**1. Edit and push in the submodule.** From the patpy repo root:
+
+```bash
+cd docs/tutorials/notebooks
+git checkout main                  # submodules check out a detached HEAD by default
+# ... edit notebooks ...
+git add <file>.ipynb
+git commit -m "Update <tutorial>"
+git push origin main
+```
+
+**2. Bump the pointer in patpy.** Back in the parent repo, the submodule will now show as modified — git is recording the new commit SHA your tutorials submodule points at. Commit that pointer bump:
+
+```bash
+cd ../../..                          # back to patpy repo root
+git add docs/tutorials/notebooks
+git commit -m "Bump tutorials submodule"
+git push
+```
+
+Both pushes are needed: the first publishes the notebook changes, the second tells `patpy` (and Read the Docs) which commit of `patpy_tutorials` to render.
+
+**Pulling tutorial updates from someone else.** Run this from the patpy root:
+
+```bash
+git submodule update --init --recursive             # if you don't have the submodule yet
+git submodule update --remote docs/tutorials/notebooks  # fast-forward to the latest pinned commit
+```
+
+**Common gotcha.** If `git status` in `patpy` shows `modified: docs/tutorials/notebooks (new commits)`, you have local commits in the submodule that aren't pushed yet, or you forgot the pointer bump in step 2.
 
 #### Hints
 
