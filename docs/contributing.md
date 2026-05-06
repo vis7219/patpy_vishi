@@ -310,29 +310,39 @@ please check out [this feature request][issue-render-notebooks] in the `cookiecu
 
 #### Editing tutorial notebooks (submodule workflow)
 
-Tutorial notebooks live in [lueckenlab/patpy_tutorials][patpy-tutorials-repo] and are pinned in `patpy` at a specific commit. Editing them is a two-step process:
+Tutorial notebooks live in [lueckenlab/patpy_tutorials][patpy-tutorials-repo] and are pinned in `patpy` at a specific commit. Because the notebooks live in a different repository, **a single notebook change typically requires two pull requests** — one in each repo:
 
-**1. Edit and push in the submodule.** From the patpy repo root:
+1. A PR on [lueckenlab/patpy_tutorials][patpy-tutorials-repo] containing the actual notebook changes.
+2. A PR on [lueckenlab/patpy][patpy-repo] that bumps the submodule pointer to the new tutorials commit, so the patpy docs build (and Read the Docs preview) renders the updated notebooks.
+
+The day-to-day commands look like this:
+
+**1. Edit and open a PR in the tutorials submodule.** From the patpy repo root:
 
 ```bash
 cd docs/tutorials/notebooks
-git checkout main                  # submodules check out a detached HEAD by default
+git checkout -b my-tutorial-update     # submodules check out a detached HEAD by default
 # ... edit notebooks ...
 git add <file>.ipynb
 git commit -m "Update <tutorial>"
-git push origin main
+git push -u origin my-tutorial-update
+# then open a PR on lueckenlab/patpy_tutorials and get it reviewed/merged
 ```
 
-**2. Bump the pointer in patpy.** Back in the parent repo, the submodule will now show as modified — git is recording the new commit SHA your tutorials submodule points at. Commit that pointer bump:
+**2. Bump the pointer in your patpy PR.** Back in the parent repo, fast-forward the submodule to the merged tutorials commit (or to your branch if you want a preview before the tutorials PR is merged) and commit the pointer bump on your patpy feature branch:
 
 ```bash
-cd ../../..                          # back to patpy repo root
+cd ../../..                                              # back to patpy repo root
+git checkout my-feature-branch                           # your patpy PR branch
+git submodule update --remote docs/tutorials/notebooks   # fast-forward to the new tutorials commit
 git add docs/tutorials/notebooks
 git commit -m "Bump tutorials submodule"
 git push
 ```
 
-Both pushes are needed: the first publishes the notebook changes, the second tells `patpy` (and Read the Docs) which commit of `patpy_tutorials` to render.
+`git status` in `patpy` will then show no submodule diff. Without this pointer bump, your patpy PR (and the Read the Docs preview built for it) will keep rendering the old notebook content even after the tutorials PR is merged.
+
+**Tip.** Strictly speaking the two PRs can move in either order, but the cleanest sequence is: open and merge the tutorials PR first, then open the patpy PR with the pointer bump on top of it. That way the patpy PR's RTD preview shows the final state.
 
 **Pulling tutorial updates from someone else.** Run this from the patpy root:
 
@@ -341,7 +351,9 @@ git submodule update --init --recursive             # if you don't have the subm
 git submodule update --remote docs/tutorials/notebooks  # fast-forward to the latest pinned commit
 ```
 
-**Common gotcha.** If `git status` in `patpy` shows `modified: docs/tutorials/notebooks (new commits)`, you have local commits in the submodule that aren't pushed yet, or you forgot the pointer bump in step 2.
+**Common gotcha.** If `git status` in `patpy` shows `modified: docs/tutorials/notebooks (new commits)`, you have local commits in the submodule that aren't pushed yet, or you forgot the pointer bump described above.
+
+[patpy-repo]: https://github.com/lueckenlab/patpy
 
 #### Hints
 
