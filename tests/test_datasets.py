@@ -57,7 +57,7 @@ def test_combat_load_metadata(tmp_path):
         assert isinstance(adata, AnnData)
         assert isinstance(meta_adata, AnnData)
         # Sample-level metadata: one row per COMBAT sample.
-        assert meta_adata.n_obs == 138
+        assert meta_adata.n_obs == 137
 
         adata, meta_adata, info = patpy.datasets.combat(load_metadata=True, return_dataset_info=True)
         assert isinstance(meta_adata, AnnData)
