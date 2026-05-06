@@ -294,10 +294,23 @@ class ConditionComparison:
         Parameters
         ----------
         contrast : str
+            Contrast label identifying the model instance and used to filter ``results_df``.
         results_df : pd.DataFrame
             Full results DataFrame returned by :meth:`run`.
         **plot_kwargs
-            Forwarded to pertpy's ``plot_volcano``.
+            Additional keyword arguments forwarded to pertpy's ``plot_volcano``.
+        
+            
+        Returns
+        -------
+        Whatever pertpy's ``plot_volcano`` returns (usually ``None`` or a
+        Figure).
+
+        Examples
+        --------
+        >>> cc = ConditionComparison(pt.tl.PyDESeq2, layer="counts")
+        >>> res = cc.run(pdata, condition_cols=["Source", "Sex"])
+        >>> cc.plot_volcano("COVID_SEV_0_vs_HV_0", results_df=res)
         """
         return self._plot("plot_volcano", contrast=contrast, results_df=results_df, **plot_kwargs)
 
@@ -313,10 +326,22 @@ class ConditionComparison:
         Parameters
         ----------
         contrast : str
+            Contrast label identifying the model instance and used to filter ``results_df``.
         results_df : pd.DataFrame
             Full results DataFrame returned by :meth:`run`.
         **plot_kwargs
-            Forwarded to pertpy's ``plot_fold_change``.
+            Additional keyword arguments forwarded to pertpy's ``plot_fold_change``.
+        
+        Returns
+        -------
+        Whatever pertpy's ``plot_fold_change`` returns (usually ``None`` or a
+        Figure).
+
+        Examples
+        --------
+        >>> cc = ConditionComparison(pt.tl.PyDESeq2, layer="counts")
+        >>> res = cc.run(pdata, condition_cols=["Source", "Sex"])
+        >>> cc.plot_fold_change("COVID_SEV_0_vs_HV_0", results_df=res, n_top_vars=20)
         """
         return self._plot("plot_fold_change", contrast=contrast, results_df=results_df, **plot_kwargs)
 
@@ -342,7 +367,17 @@ class ConditionComparison:
         results_df : pd.DataFrame
             Full results DataFrame returned by :meth:`run`.
         **plot_kwargs
-            Forwarded to pertpy's ``plot_multicomparison_fc``.
+            Additional keyword arguments forwarded to pertpy's ``plot_multicomparison_fc``.
+
+        Returns
+        -------
+        Whatever pertpy's ``plot_multicomparison_fc`` returns.
+
+        Examples
+        --------
+        >>> cc = ConditionComparison(pt.tl.PyDESeq2, layer="counts")
+        >>> res = cc.run(pdata, condition_cols=["Source", "Sex"])
+        >>> cc.plot_multicomparison_fc(list(cc.models_)[0], results_df=res)
         """
         model = self.get_model(contrast)
         plot_fn = getattr(model, "plot_multicomparison_fc", None)

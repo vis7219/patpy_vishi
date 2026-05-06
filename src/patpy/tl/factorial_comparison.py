@@ -13,17 +13,6 @@ if TYPE_CHECKING:
     import anndata as ad
 
 
-@contextmanager
-def _suppress_stdout():
-    """Suppress stdout — silences PyDESeq2's summary() print calls."""
-    old = sys.stdout
-    sys.stdout = io.StringIO()
-    try:
-        yield
-    finally:
-        sys.stdout = old
-
-
 def _make_and_fit(model_cls: Any, adata: "ad.AnnData", design_formula: str, layer: str | None) -> Any:
     """Construct a pertpy model and call ``.fit()`` exactly once.
 
@@ -184,6 +173,7 @@ def _pydeseq2_group(
     group_col: str,
     contrasts: list[dict],
     layer: str | None,
+    **deseq2_kwargs: Any,
 ) -> tuple[pd.DataFrame, Any]:
     """Single PyDESeq2 model with ``~ group``; extract every pairwise contrast.
 
@@ -225,8 +215,8 @@ def _pydeseq2_group(
                 if baseline not in level_to_coef:
                     raise KeyError(f"Level '{baseline}' not in coefficient map {level_to_coef}")
                 vec[coef_names.index(level_to_coef[baseline])] -= 1.0
-            with _suppress_stdout():
-                res = model._test_single_contrast(vec.tolist())
+            kw = {"quiet": True, **deseq2_kwargs}
+            res = model._test_single_contrast(vec.tolist(), **kw)
             res["contrast"] = label
             results.append(res)
         except Exception as exc:  # noqa: BLE001
@@ -247,6 +237,7 @@ def _pydeseq2_interaction(
     condition_cols: list[str],
     ref_levels: dict[str, str] | None,
     layer: str | None,
+    **deseq2_kwargs: Any,
 ) -> tuple[pd.DataFrame, Any]:
     """Single PyDESeq2 model with ``~ A + B + A:B``; test every coefficient.
 
@@ -274,8 +265,8 @@ def _pydeseq2_interaction(
         vec = np.zeros(len(coef_names))
         vec[i] = 1.0
         try:
-            with _suppress_stdout():
-                res = model._test_single_contrast(vec.tolist())
+            kw = {"quiet": True, **deseq2_kwargs}
+            res = model._test_single_contrast(vec.tolist(), **kw)
             res["contrast"] = coef
             results.append(res)
         except Exception as exc:  # noqa: BLE001
@@ -384,6 +375,7 @@ class FactorialDE:
         sep: str = "_",
         ref_levels: dict[str, str] | None = None,
         contrasts: list[dict] | None = None,
+        **deseq2_kwargs: Any,
     ) -> pd.DataFrame:
         """Fit the model and extract all contrasts / coefficients.
 
@@ -442,7 +434,7 @@ class FactorialDE:
                 )
             elif name == "PyDESeq2":
                 results, model = _pydeseq2_group(
-                    self.model_cls, adata, group_col, contrasts, self.layer
+                    self.model_cls, adata, group_col, contrasts, self.layer, **deseq2_kwargs
                 )
             else:
                 raise ValueError(
@@ -460,7 +452,7 @@ class FactorialDE:
                 )
             elif name == "PyDESeq2":
                 results, model = _pydeseq2_interaction(
-                    self.model_cls, adata, condition_cols, ref_levels, self.layer
+                    self.model_cls, adata, condition_cols, ref_levels, self.layer, **deseq2_kwargs
                 )
             else:
                 raise ValueError(
@@ -565,6 +557,7 @@ class FactorialDE:
         ref_levels: dict[str, str] | None = None,
         contrasts: list[dict] | None = None,
         layer: str | None = None,
+        **deseq2_kwargs: Any,
     ) -> tuple[pd.DataFrame, Any]:
         """One-shot convenience wrapper — returns ``(results_df, model)``.
 
@@ -603,6 +596,7 @@ class FactorialDE:
             adata, condition_cols,
             encoding=encoding, group_col=group_col, sep=sep,
             ref_levels=ref_levels, contrasts=contrasts,
+            **deseq2_kwargs,
         )
         return results, fde.model_
 
