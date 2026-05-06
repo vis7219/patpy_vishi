@@ -19,10 +19,17 @@ and this project adheres to [Semantic Versioning][].
 ### Changed
 
 - Moved distances caching from anndata object to the instance of the sample representation class
+- Renamed dataset loaders `combat_preprocessed`, `hlca_preprocessed`, `onek1k_preprocessed`, `stephenson_preprocessed`, `ticatlas_preprocessed` to `combat`, `hlca`, `onek1k`, `stephenson`, `ticatlas` (breaking; no deprecation aliases).
+
+### Added
+
+- `kind: Literal["raw", "processed"] = "processed"` argument on every dataset loader. Currently only the processed variants are wired up; `kind="raw"` raises `NotImplementedError` until raw URLs are provided.
+- `load_metadata: bool = False` argument on `patpy.datasets.combat` that additionally downloads the ~4 MB sample-metadata `AnnData` (Figshare ID `64291092`) and returns it as an extra tuple element. Combined with `return_dataset_info`, the return order is `(adata, meta_adata, info)`.
 
 ### Deleted
 
 - `DISTANCES_UNS_KEY` from sample representation methods
+- `combat_preprocessed`, `hlca_preprocessed`, `onek1k_preprocessed`, `stephenson_preprocessed`, `ticatlas_preprocessed` (use `combat`, `hlca`, `onek1k`, `stephenson`, `ticatlas` instead).
 
 ## 0.16.0 – datasets module
 
