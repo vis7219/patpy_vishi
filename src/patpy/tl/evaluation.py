@@ -445,41 +445,54 @@ def _select_random_subset(distances, target, num_donors_subset=None, proportion_
     return distances_subset, target_subset
 
 
-# PERMANOVA (permutational MANOVA on a distance matrix)
-# Pseudo-F (so called as there's no true known null distribution in permutation)
-# and sums of squares (SS) come from Anderson (2001)
-# SS decomposition method is implemented in the same way as vegan::adonis2.
-# Ref: Anderson, M.J. (2001). Austral Ecology 26, 32-46.
 def _permanova_ss_w(distance_sq: np.ndarray, grouping: np.ndarray) -> float:
-    """Within-group SS component (``s_W``)"""
+    """Within-group sum of squares ``S_W`` used in one-way PERMANOVA.
+
+    Matches the ``s_W`` term from Anderson (2001) and ``vegan::adonis2`` for a
+    single factor: sum over unordered within-group pairs ``(i, j), i<j`` of
+    ``distance_sq[i, j] / n_g`` where ``n_g`` is the sample size of that group.
+    ``distance_sq`` must hold squared distances (``d**2``).
+    """
     n = distance_sq.shape[0]
     counts = np.bincount(grouping)
-    s_w = 0.0
-    for i in range(n):
-        g = grouping[i]
-        ng = counts[g]
-        row_sum = 0.0
-        for j in range(i + 1, n):
-            if grouping[j] == g:
-                row_sum += distance_sq[i, j]
-        s_w += row_sum / ng
-    return s_w
+    i_u, j_u = np.triu_indices(n, k=1)
+    same = grouping[i_u] == grouping[j_u]
+    gi = grouping[i_u[same]]
+    return float((distance_sq[i_u[same], j_u[same]] / counts[gi]).sum())
 
 
 def permanova_pseudo_f_statistic(distances: np.ndarray, grouping: np.ndarray) -> float:
-    """Compute the PERMANOVA pseudo-F for a symmetric distance matrix.
+    """PERMANOVA pseudo-:math:`F` for a precomputed distance matrix (one factor).
+
+    Use this when you already have pairwise distances between samples and a **categorical**
+    grouping (same length and order as rows/columns). It asks whether samples are more
+    dissimilar **between** groups than **within**, in the same spirit as a one-way ANOVA
+    but on distances (see :func:`associate_embedding_with_covariates` for an analogous
+    test on an embedding). The statistic is a ratio of between-group to within-group
+    variation of squared distances; **larger values mean stronger separation** of groups
+    in distance space.
+
+    This follows Anderson (2001) and is the single-factor decomposition used in
+    ``vegan::adonis2``. The label *pseudo*-:math:`F` reflects that the sampling
+    distribution is obtained by permutation (see :func:`permanova_test`), not an
+    :math:`F` table.
 
     Parameters
     ----------
     distances
-        Square ``(n, n)`` distance matrix (zeros on diagonal).
+        Square ``(n, n)`` dissimilarity matrix (zeros on the diagonal).
     grouping
-        Length-``n`` group labels (any hashable values; recoded internally).
+        Length-``n`` group labels (any hashable values; recoded as contiguous integers).
 
     Returns
     -------
     float
-        Pseudo-F statistic (larger values indicate stronger separation).
+        Pseudo-:math:`F` statistic.
+
+    References
+    ----------
+    Anderson, M.J. (2001). A new method for non-parametric multivariate analysis of
+    variance. *Austral Ecology* 26, 32-46.
     """
     d = np.asarray(distances, dtype=float)
     if d.ndim != 2 or d.shape[0] != d.shape[1]:
@@ -507,7 +520,11 @@ def permanova_test(
     permutations: int = 999,
     random_state: int | np.random.Generator | None = None,
 ) -> dict:
-    """Permutation test for PERMANOVA.
+    """Monte Carlo permutation test for :func:`permanova_pseudo_f_statistic`.
+
+    Randomly permutes group labels and recomputes the pseudo-:math:`F`. The p-value is
+    ``(1 + r) / (1 + permutations)``, where ``r`` counts permutations whose pseudo-:math:`F`
+    is at least the observed value (the observed statistic is included, as in ``vegan``).
 
     Parameters
     ----------
@@ -540,7 +557,7 @@ def permanova_test(
 
 
 def _validate_permanova_target(target: pd.Series) -> None:
-    """Raise if ``target`` looks like a continuous outcome unsuitable for PERMANOVA."""
+    """Raise if ``target`` looks numeric/high-cardinality rather than a grouping factor."""
     t = pd.Series(target)
     n = len(t)
     n_u = t.nunique(dropna=False)
