@@ -7,6 +7,7 @@ from patpy.tl.evaluation import (
     _filter_missing,
     _get_normalized_distances,
     _get_null_distances_distribution,
+    _permanova_ss_w,
     _select_random_subset,
     evaluate_prediction,
     evaluate_representation,
@@ -102,6 +103,39 @@ def test_permanova_pseudo_f_reference_ties():
     d = np.array([[0, 1, 1, 4], [1, 0, 3, 2], [1, 3, 0, 3], [4, 2, 3, 0]], dtype=float)
     f = permanova_pseudo_f_statistic(d, np.array([0, 0, 1, 1]))
     assert f == pytest.approx(2.0)
+
+
+def _permanova_ss_w_double_loop(distance_sq: np.ndarray, grouping: np.ndarray) -> float:
+    """Reference implementation for vectorization regression test (Anderson / adonis2 S_W).
+    Included to make sure the vectorized implementation is equivalent."""
+    n = distance_sq.shape[0]
+    counts = np.bincount(grouping)
+    s_w = 0.0
+    for i in range(n):
+        g = grouping[i]
+        ng = counts[g]
+        row_sum = 0.0
+        for j in range(i + 1, n):
+            if grouping[j] == g:
+                row_sum += distance_sq[i, j]
+        s_w += row_sum / ng
+    return s_w
+
+
+def test_permanova_ss_w_vectorized_matches_double_loop():
+    rng = np.random.default_rng(0)
+    for n in (6, 9, 14):
+        for _ in range(8):
+            d = rng.random((n, n))
+            d = (d + d.T) / 2
+            np.fill_diagonal(d, 0)
+            d_sq = d * d
+            grouping = rng.integers(0, 4, size=n, dtype=int)
+            if len(np.unique(grouping)) < 2:
+                grouping[0] = (grouping[0] + 1) % 4
+            vec = _permanova_ss_w(d_sq, grouping)
+            ref = _permanova_ss_w_double_loop(d_sq, grouping)
+            assert vec == pytest.approx(ref)
 
 
 def test_permanova_non_contiguous_group_codes():
