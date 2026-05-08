@@ -1,21 +1,21 @@
 from ._datasets import (
     DatasetInfo,
-    combat_preprocessed,
-    hlca_preprocessed,
-    onek1k_preprocessed,
-    stephenson_preprocessed,
-    ticatlas_preprocessed,
+    combat,
+    hlca,
+    onek1k,
+    stephenson,
+    ticatlas,
 )
 from .synthetic import covid_19_hallmarks, process_adata, simulate_data
 
 __all__ = [
     "DatasetInfo",
-    "combat_preprocessed",
+    "combat",
     "covid_19_hallmarks",
-    "hlca_preprocessed",
-    "onek1k_preprocessed",
+    "hlca",
+    "onek1k",
     "process_adata",
     "simulate_data",
-    "stephenson_preprocessed",
-    "ticatlas_preprocessed",
+    "stephenson",
+    "ticatlas",
 ]
