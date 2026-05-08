@@ -295,8 +295,8 @@ class ConditionComparison:
             Full results DataFrame returned by :meth:`run`.
         **plot_kwargs
             Additional keyword arguments forwarded to pertpy's ``plot_volcano``.
-        
-            
+
+
         Returns
         -------
         Whatever pertpy's ``plot_volcano`` returns (usually ``None`` or a
@@ -327,7 +327,7 @@ class ConditionComparison:
             Full results DataFrame returned by :meth:`run`.
         **plot_kwargs
             Additional keyword arguments forwarded to pertpy's ``plot_fold_change``.
-        
+
         Returns
         -------
         Whatever pertpy's ``plot_fold_change`` returns (usually ``None`` or a

@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-import io
-import sys
 import warnings
-from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -13,7 +10,7 @@ if TYPE_CHECKING:
     import anndata as ad
 
 
-def _make_and_fit(model_cls: Any, adata: "ad.AnnData", design_formula: str, layer: str | None) -> Any:
+def _make_and_fit(model_cls: Any, adata: ad.AnnData, design_formula: str, layer: str | None) -> Any:
     """Construct a pertpy model and call ``.fit()`` exactly once.
 
     pertpy's ``EdgeR.fit()`` assigns ``self.fit = <R ListVector>``, clobbering
@@ -568,9 +565,13 @@ class FactorialDE:
         """
         fde = cls(model_cls, layer=layer)
         results = fde.run(
-            adata, condition_cols,
-            encoding=encoding, group_col=group_col, sep=sep,
-            ref_levels=ref_levels, contrasts=contrasts,
+            adata,
+            condition_cols,
+            encoding=encoding,
+            group_col=group_col,
+            sep=sep,
+            ref_levels=ref_levels,
+            contrasts=contrasts,
             **deseq2_kwargs,
         )
         return results, fde.model_
