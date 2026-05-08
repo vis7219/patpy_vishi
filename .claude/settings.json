@@ -1,23 +1,23 @@
 {
-  "permissions": {
-    "allow": [
-      "Bash(gh api:*)",
-      "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(conda activate:*)",
-      "Bash(python -c \"from src.patpy.tl.supervised import MixMIL, SupervisedSampleMethod; print\\(''Imports successful''\\)\")",
-      "Bash(pip list:*)",
-      "Bash(pip install:*)",
-      "Bash(conda env:*)",
-      "Bash(bash -c \"source activate sample_representation && python -m pytest tests/test_supervised_methods.py::TestMixMIL::test_predict_binary_string_labels_creates_mappings -xvs\")",
-      "Bash(bash -c \"source activate sample_representation && python -m pytest tests/test_supervised_methods.py::TestMixMIL -v --tb=line 2>&1\")",
-      "Bash(bash -c \"source activate sample_representation && python -m pytest tests/test_supervised_methods.py::TestMixMIL::test_training_history_is_list_of_dicts -xvs\")",
-      "Bash(bash -c \"source activate sample_representation && python -m pytest tests/test_supervised_methods.py::TestMixMIL::test_training_history_extends_on_fine_tune -xvs\")",
-      "Bash(bash -c \"source activate sample_representation)",
-      "Bash(bash -c \"conda run -n sample_representation python -m pytest tests/test_supervised_methods.py::TestMixMIL -v 2>&1 | tail -30\")",
-      "Bash(python -m py_compile /Users/vladimir.shitov/Documents/programming/patpy/src/patpy/tl/supervised.py)",
-      "Bash(bash -c \"conda run -n sample_representation python -m pytest tests/test_supervised_methods.py::TestMixMIL::test_init_accepts_single_label_as_string tests/test_supervised_methods.py::TestMixMIL::test_init_still_accepts_lists tests/test_supervised_methods.py::TestMixMIL::test_fine_tune_accepts_single_label_as_string tests/test_supervised_methods.py::TestMixMIL::test_fine_tune_still_accepts_lists tests/test_supervised_methods.py::TestMixMIL::test_string_input_works_end_to_end -v 2>&1\")",
-      "Bash(bash -c \"conda run -n sample_representation python -m pytest tests/test_supervised_methods.py::TestMixMIL -v)",
-      "Bash(/Users/vladimir.shitov/miniconda3/envs/sample_representation/bin/python -m pytest tests/test_supervised_methods.py::TestMixMIL -q)"
-    ]
-  }
+    "permissions": {
+        "allow": [
+            "Bash(gh api:*)",
+            "WebFetch(domain:raw.githubusercontent.com)",
+            "Bash(conda activate:*)",
+            "Bash(python -c \"from src.patpy.tl.supervised import MixMIL, SupervisedSampleMethod; print\\(''Imports successful''\\)\")",
+            "Bash(pip list:*)",
+            "Bash(pip install:*)",
+            "Bash(conda env:*)",
+            "Bash(bash -c \"source activate sample_representation && python -m pytest tests/test_supervised_methods.py::TestMixMIL::test_predict_binary_string_labels_creates_mappings -xvs\")",
+            "Bash(bash -c \"source activate sample_representation && python -m pytest tests/test_supervised_methods.py::TestMixMIL -v --tb=line 2>&1\")",
+            "Bash(bash -c \"source activate sample_representation && python -m pytest tests/test_supervised_methods.py::TestMixMIL::test_training_history_is_list_of_dicts -xvs\")",
+            "Bash(bash -c \"source activate sample_representation && python -m pytest tests/test_supervised_methods.py::TestMixMIL::test_training_history_extends_on_fine_tune -xvs\")",
+            "Bash(bash -c \"source activate sample_representation)",
+            "Bash(bash -c \"conda run -n sample_representation python -m pytest tests/test_supervised_methods.py::TestMixMIL -v 2>&1 | tail -30\")",
+            "Bash(python -m py_compile /Users/vladimir.shitov/Documents/programming/patpy/src/patpy/tl/supervised.py)",
+            "Bash(bash -c \"conda run -n sample_representation python -m pytest tests/test_supervised_methods.py::TestMixMIL::test_init_accepts_single_label_as_string tests/test_supervised_methods.py::TestMixMIL::test_init_still_accepts_lists tests/test_supervised_methods.py::TestMixMIL::test_fine_tune_accepts_single_label_as_string tests/test_supervised_methods.py::TestMixMIL::test_fine_tune_still_accepts_lists tests/test_supervised_methods.py::TestMixMIL::test_string_input_works_end_to_end -v 2>&1\")",
+            "Bash(bash -c \"conda run -n sample_representation python -m pytest tests/test_supervised_methods.py::TestMixMIL -v)",
+            "Bash(/Users/vladimir.shitov/miniconda3/envs/sample_representation/bin/python -m pytest tests/test_supervised_methods.py::TestMixMIL -q)"
+        ]
+    }
 }
