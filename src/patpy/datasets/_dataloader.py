@@ -68,10 +68,7 @@ def _download(  # pragma: no cover
                     content_length = int(head_response.headers.get("content-length", 0))
 
                     if content_length == 0:
-                        logger.warning(
-                            f"Reported content length for {url} is 0 bytes. "
-                            "The file may be empty."
-                        )
+                        logger.warning(f"Reported content length for {url} is 0 bytes. The file may be empty.")
 
                     free_space = shutil.disk_usage(output_path).free
                     if content_length > free_space:
