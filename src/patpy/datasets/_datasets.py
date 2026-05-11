@@ -149,7 +149,7 @@ _DATASET_URLS: dict[str, dict[DatasetKind, str | None]] = {
 }
 
 # Zipped sample-metadata AnnData for the COMBAT cohort (~4 MB).
-_COMBAT_META_URL = "https://figshare.com/ndownloader/files/64291092"
+_COMBAT_META_URL = "https://ndownloader.figshare.com/files/64291092"
 _COMBAT_META_FILENAME = "combat_meta_adata.h5ad"
 
 
