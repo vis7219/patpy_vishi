@@ -9,6 +9,7 @@ from patpy._settings import settings
 from patpy.datasets._dataloader import _download
 
 DatasetKind = Literal["raw", "processed"]
+InflammationAtlasSplit = Literal["main", "external", "validation"]
 
 
 @dataclass(frozen=True)
@@ -123,6 +124,70 @@ _TICATLAS_INFO = DatasetInfo(
     sample_metadata_columns=["patient", "gender", "subtype", "source"],
 )
 
+_COMBAT_STEPHENSON_INFO = DatasetInfo(
+    n_samples=251,
+    n_cells=1399435,
+    n_features=1856,
+    sample_key="sample_id",
+    cell_type_key="cell_coarse_aligned",
+    sample_metadata_columns=[
+        "dataset",
+        "Site",
+        "SARSCoV2PCR",
+        "Outcome",
+        "TimeSinceOnset",
+        "split",
+        "Status",
+        "severity_ord",
+        "severity_idx",
+        "outcome_bin",
+        "Status_encoded",
+    ],
+)
+
+# Per-split metadata for the inflammation atlas. All three splits are
+# latents-only (n_features=0; the 30-dim scANVI embedding lives in
+# obsm['X_scANVI_atlas']). Main carries ground-truth Level1/Level2 annotations;
+# external and validation carry model-predicted Level1pred/Level2pred labels.
+_INFLAMMATION_ATLAS_SAMPLE_METADATA_COLUMNS = [
+    "studyID",
+    "chemistry",
+    "technology",
+    "disease",
+    "sex",
+    "binned_age",
+    "disease_group",
+    "therapy_response",
+    "smoking_status",
+]
+
+_INFLAMMATION_ATLAS_INFOS: dict[InflammationAtlasSplit, DatasetInfo] = {
+    "main": DatasetInfo(
+        n_samples=817,
+        n_cells=4918140,
+        n_features=0,
+        sample_key="sampleID",
+        cell_type_key="Level1",
+        sample_metadata_columns=_INFLAMMATION_ATLAS_SAMPLE_METADATA_COLUMNS,
+    ),
+    "external": DatasetInfo(
+        n_samples=86,
+        n_cells=572872,
+        n_features=0,
+        sample_key="sampleID",
+        cell_type_key="Level1pred",
+        sample_metadata_columns=_INFLAMMATION_ATLAS_SAMPLE_METADATA_COLUMNS,
+    ),
+    "validation": DatasetInfo(
+        n_samples=144,
+        n_cells=849922,
+        n_features=0,
+        sample_key="sampleID",
+        cell_type_key="Level1pred",
+        sample_metadata_columns=_INFLAMMATION_ATLAS_SAMPLE_METADATA_COLUMNS,
+    ),
+}
+
 # Registry of Figshare URLs for each dataset / kind. ``None`` means "not yet
 # uploaded"; the loader will raise NotImplementedError for those combinations.
 _DATASET_URLS: dict[str, dict[DatasetKind, str | None]] = {
@@ -144,6 +209,22 @@ _DATASET_URLS: dict[str, dict[DatasetKind, str | None]] = {
     },
     "ticatlas": {
         "processed": "https://ndownloader.figshare.com/files/64226097",
+        "raw": None,
+    },
+    "combat_stephenson": {
+        "processed": "https://ndownloader.figshare.com/files/64486770",
+        "raw": None,
+    },
+    "inflammation_atlas_main": {
+        "processed": "https://ndownloader.figshare.com/files/64486761",
+        "raw": None,
+    },
+    "inflammation_atlas_external": {
+        "processed": "https://ndownloader.figshare.com/files/64486752",
+        "raw": None,
+    },
+    "inflammation_atlas_validation": {
+        "processed": "https://ndownloader.figshare.com/files/64486758",
         "raw": None,
     },
 }
@@ -436,4 +517,126 @@ def ticatlas(
     adata = _load_named_dataset("ticatlas", kind=kind, overwrite=overwrite)
     if return_dataset_info:
         return adata, _TICATLAS_INFO
+    return adata
+
+
+def combat_stephenson(
+    kind: DatasetKind = "processed",
+    overwrite: bool = False,
+    return_dataset_info: bool = False,
+) -> AnnData | tuple[AnnData, DatasetInfo]:
+    """Harmonized COMBAT + Stephenson COVID-19 PBMC dataset.
+
+    Cross-study harmonization of the COMBAT and Stephenson COVID-19 PBMC cohorts
+    sharing a unified cell-type annotation (``cell_coarse_aligned``) and joint
+    PCA/scVI/scANVI embeddings (in ``adata.obsm``). The published file
+    contains 1,399,435 cells across 251 samples (2 source datasets), with 1,856
+    genes retained after harmonization. Raw counts are kept under
+    ``adata.layers['X_raw_counts']``. Sample-level metadata (Site, Status,
+    severity, outcome, etc.) is available in ``adata.obs`` directly.
+
+    Parameters
+    ----------
+    kind
+        Either ``"processed"`` (default) or ``"raw"``. The processed dataset is
+        available via Figshare; ``"raw"`` currently raises
+        :class:`NotImplementedError`.
+    overwrite
+        If ``True``, re-download the dataset even when a cached copy exists.
+    return_dataset_info
+        If ``True``, return a tuple ``(adata, DatasetInfo)`` instead of just ``adata``.
+
+    References
+    ----------
+        Ahern, D. J., et al. (2022). A blood atlas of COVID-19 defines hallmarks of disease severity and specificity. Cell, 185(5), 916-938. https://doi.org/10.1016/j.cell.2022.01.012
+        Stephenson, E., et al. (2021). Single-cell multi-omics analysis of the immune response in COVID-19. Nature medicine, 27(5), 904-916. https://doi.org/10.1038/s41591-021-01329-2
+
+    Returns
+    -------
+        :class:`~anndata.AnnData` object of scRNA-seq profiles, optionally paired
+        with a :class:`DatasetInfo` describing the dataset's standard schema.
+
+    Examples
+    --------
+        >>> import patpy
+        >>> adata = patpy.datasets.combat_stephenson()
+        >>> adata, info = patpy.datasets.combat_stephenson(return_dataset_info=True)
+    """
+    adata = _load_named_dataset("combat_stephenson", kind=kind, overwrite=overwrite)
+    if return_dataset_info:
+        return adata, _COMBAT_STEPHENSON_INFO
+    return adata
+
+
+def inflammation_atlas(
+    split: InflammationAtlasSplit = "main",
+    kind: DatasetKind = "processed",
+    overwrite: bool = False,
+    return_dataset_info: bool = False,
+) -> AnnData | tuple[AnnData, DatasetInfo]:
+    """Cross-study inflammation atlas (scANVI latents).
+
+    The published "processed" version is a scANVI-embedded latents-only
+    :class:`~anndata.AnnData` with the 30-dimensional scANVI embedding under
+    ``adata.obsm['X_scANVI_atlas']``. The file has no gene-expression matrix
+    for now; use the embedding directly for
+    sample-representation workflows. Sample-level metadata (``studyID``,
+    ``chemistry``, ``disease``, ``sex``, ``binned_age``) is available in
+    ``adata.obs`` directly.
+
+    Three splits are exposed via the ``split`` argument:
+
+    * ``"main"`` (default) — atlas training data, 4,918,140 cells / 817 samples,
+      with ground-truth ``Level1`` / ``Level2`` cell-type annotations.
+    * ``"external"`` — held-out studies, 572,872 cells /
+      86 samples, with model-predicted ``Level1pred`` / ``Level2pred`` labels.
+    * ``"validation"`` — held-out samples, 849,922 cells /
+      144 samples, with model-predicted ``Level1pred`` / ``Level2pred`` labels.
+
+    Parameters
+    ----------
+    split
+        Which split to load: ``"main"``, ``"external"``, or ``"validation"``.
+        Defaults to ``"main"``.
+    kind
+        Either ``"processed"`` (default) or ``"raw"``. The processed splits are
+        available via Figshare; ``"raw"`` currently raises
+        :class:`NotImplementedError`.
+    overwrite
+        If ``True``, re-download the dataset even when a cached copy exists.
+    return_dataset_info
+        If ``True``, return a tuple ``(adata, DatasetInfo)`` instead of just
+        ``adata``. The :class:`DatasetInfo` is split-specific: ``cell_type_key``
+        is ``"Level1"`` for ``main`` and ``"Level1pred"`` for the other two
+        splits. ``n_features`` is reported as ``0`` because the file is
+        latents-only.
+
+        
+    References
+    ----------
+       Jiménez-Gracia, L., Maspero, D., Aguilar-Fernández, S. et al. Interpretable inflammation landscape of circulating immune cells. Nat Med 32, 633–644 (2026). https://doi.org/10.1038/s41591-025-04126-3
+
+        
+    Returns
+    -------
+        :class:`~anndata.AnnData` object with scANVI latents under
+        ``obsm['X_scANVI_atlas']``, optionally paired with a :class:`DatasetInfo`
+        describing the requested split's standard schema.
+
+    Examples
+    --------
+        >>> import patpy
+        >>> adata = patpy.datasets.inflammation_atlas()
+        >>> latents = adata.obsm["X_scANVI_atlas"]
+        >>> adata, info = patpy.datasets.inflammation_atlas(return_dataset_info=True)
+        >>> ext = patpy.datasets.inflammation_atlas(split="external")
+        >>> val = patpy.datasets.inflammation_atlas(split="validation")
+    """
+    if split not in _INFLAMMATION_ATLAS_INFOS:
+        raise ValueError(
+            f"split must be one of {tuple(_INFLAMMATION_ATLAS_INFOS)}, got {split!r}."
+        )
+    adata = _load_named_dataset(f"inflammation_atlas_{split}", kind=kind, overwrite=overwrite)
+    if return_dataset_info:
+        return adata, _INFLAMMATION_ATLAS_INFOS[split]
     return adata
