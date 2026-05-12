@@ -611,12 +611,12 @@ def inflammation_atlas(
         splits. ``n_features`` is reported as ``0`` because the file is
         latents-only.
 
-        
+
     References
     ----------
        Jiménez-Gracia, L., Maspero, D., Aguilar-Fernández, S. et al. Interpretable inflammation landscape of circulating immune cells. Nat Med 32, 633–644 (2026). https://doi.org/10.1038/s41591-025-04126-3
 
-        
+
     Returns
     -------
         :class:`~anndata.AnnData` object with scANVI latents under
@@ -633,9 +633,7 @@ def inflammation_atlas(
         >>> val = patpy.datasets.inflammation_atlas(split="validation")
     """
     if split not in _INFLAMMATION_ATLAS_INFOS:
-        raise ValueError(
-            f"split must be one of {tuple(_INFLAMMATION_ATLAS_INFOS)}, got {split!r}."
-        )
+        raise ValueError(f"split must be one of {tuple(_INFLAMMATION_ATLAS_INFOS)}, got {split!r}.")
     adata = _load_named_dataset(f"inflammation_atlas_{split}", kind=kind, overwrite=overwrite)
     if return_dataset_info:
         return adata, _INFLAMMATION_ATLAS_INFOS[split]
