@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning][].
 [keep a changelog]: https://keepachangelog.com/en/1.0.0/
 [semantic versioning]: https://semver.org/spec/v2.0.0.html
 
+## 0.16.4
+
+### Added
+
+- `patpy.datasets.combat_stephenson`: harmonized COMBAT + Stephenson COVID-19 PBMC cohort (251 samples / 1,399,435 cells / 1,856 genes) with shared cell_coarse_aligned annotations and joint PCA/scVI/scANVI embeddings.
+- `patpy.datasets.inflammation_atlas`: inflammation atlas cross-study dataset. Added only scANVI latents. 3 splits (main / external / validation) selected through a split argument, each with its own DatasetInfo (cell_type_key is Level1 for main, Level1pred for external/validation).
+
 ## 0.16.3
 
 ### Fixed
