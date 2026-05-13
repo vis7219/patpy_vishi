@@ -1099,7 +1099,13 @@ class PILOTGMVAE(SampleRepresentationMethod):
     def prepare_anndata(self, adata):
         super().prepare_anndata(adata)
 
-        from pilotgm.core import train_gmvae
+        try:
+            from pilotgm.core import train_gmvae
+        except ImportError:
+            raise ImportError(
+                "PILOT-GM-VAE is not installed. "
+                "Install it using: pip install 'git+https://github.com/vis7219/PILOT-GM-VAE_fork.git'"
+            ) from None
 
         train_gmvae(
             adata=self.adata,
@@ -1133,7 +1139,13 @@ class PILOTGMVAE(SampleRepresentationMethod):
         self._fitted = True
 
     def calculate_distance_matrix(self, force: bool = False):
-        from pilotgm.core import gmmvae_wasserstein_distance
+        try:
+            from pilotgm.core import gmmvae_wasserstein_distance
+        except ImportError:
+            raise ImportError(
+                "PILOT-GM-VAE is not installed. "
+                "Install it using: pip install 'git+https://github.com/vis7219/PILOT-GM-VAE_fork.git'"
+            ) from None
 
         # Check if already calculated
         distances = super().calculate_distance_matrix(force=force)
