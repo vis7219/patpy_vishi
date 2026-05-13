@@ -1000,8 +1000,6 @@ class PILOTGMVAE(SampleRepresentationMethod):
     Source: https://academic.oup.com/bib/article/26/5/bbaf547/8287234?login=true
     """
 
-    DISTANCES_UNS_KEY = "X_pilotgmvae_distances"
-
     def __init__(
         self,
         sample_key: str,
@@ -1171,7 +1169,6 @@ class PILOTGMVAE(SampleRepresentationMethod):
         # Distance
         distances = self.adata.uns["EMD_df"].loc[self.samples, self.samples].to_numpy()
         distances = make_matrix_symmetric(distances)
-        self.adata.uns[self.DISTANCES_UNS_KEY] = distances
         self._distances = distances
 
         # Sample Representation
