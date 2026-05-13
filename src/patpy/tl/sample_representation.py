@@ -1095,6 +1095,7 @@ class PILOTGMVAE(SampleRepresentationMethod):
         self.epsilon = epsilon
 
     def prepare_anndata(self, adata):
+        """Train PILOT GM VAE model"""
         super().prepare_anndata(adata)
 
         try:
@@ -1137,6 +1138,7 @@ class PILOTGMVAE(SampleRepresentationMethod):
         self._fitted = True
 
     def calculate_distance_matrix(self, force: bool = False):
+        """Compute Wasserstein distances between sample and sample representation"""
         try:
             from pilotgm.core import gmmvae_wasserstein_distance
         except ImportError:
