@@ -102,7 +102,7 @@ optional-dependencies.scpoli = [
 ]
 optional-dependencies.test = [
   "coverage",
-  "filelock",       # cross-worker lock for pytest-xdist (scanpy download race)
+  "filelock",   # cross-worker lock for pytest-xdist (scanpy download race)
   "pytest",
   "pytest-cov",
 ]
