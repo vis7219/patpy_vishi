@@ -138,6 +138,56 @@ def test_ticatlas(tmp_path):
         patpy.settings.datasetdir = original
 
 
+@pytest.mark.dataset
+def test_combat_stephenson(tmp_path):
+    original = patpy.settings.datasetdir
+    patpy.settings.datasetdir = _datasetdir(tmp_path)
+    try:
+        adata = patpy.datasets.combat_stephenson()
+
+        assert isinstance(adata, AnnData)
+        assert adata.n_obs == 1399435
+        assert adata.n_vars == 1856
+        assert "X_raw_counts" in adata.layers
+
+        adata, info = patpy.datasets.combat_stephenson(return_dataset_info=True)
+        _check_dataset_info(adata, info)
+    finally:
+        patpy.settings.datasetdir = original
+
+
+@pytest.mark.dataset
+@pytest.mark.parametrize(
+    ("split", "n_obs", "n_samples"),
+    [
+        ("main", 4918140, 817),
+        ("external", 572872, 86),
+        ("validation", 849922, 144),
+    ],
+)
+def test_inflammation_atlas(tmp_path, split, n_obs, n_samples):
+    original = patpy.settings.datasetdir
+    patpy.settings.datasetdir = _datasetdir(tmp_path)
+    try:
+        adata = patpy.datasets.inflammation_atlas(split=split)
+
+        assert isinstance(adata, AnnData)
+        assert adata.n_obs == n_obs
+        assert adata.n_vars == 0
+        assert "X_scANVI_atlas" in adata.obsm
+
+        adata, info = patpy.datasets.inflammation_atlas(split=split, return_dataset_info=True)
+        assert info.n_samples == n_samples
+        _check_dataset_info(adata, info)
+    finally:
+        patpy.settings.datasetdir = original
+
+
+def test_inflammation_atlas_invalid_split():
+    with pytest.raises(ValueError):
+        patpy.datasets.inflammation_atlas(split="banana")  # type: ignore[arg-type]
+
+
 @pytest.mark.parametrize(
     "loader",
     [
@@ -146,6 +196,8 @@ def test_ticatlas(tmp_path):
         patpy.datasets.onek1k,
         patpy.datasets.stephenson,
         patpy.datasets.ticatlas,
+        patpy.datasets.combat_stephenson,
+        patpy.datasets.inflammation_atlas,
     ],
 )
 def test_kind_raw_not_implemented(loader):
