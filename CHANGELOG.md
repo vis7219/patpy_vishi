@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning][].
 
 - Turn off running dataset tests manually, they can now only be triggered manually
 
+### Fixed
+
+- Add locking scanpy test file to prevent concurrent reading and failing tests: https://github.com/scverse/scanpy/issues/4097
+
 ## 0.16.3
 
 ### Fixed
